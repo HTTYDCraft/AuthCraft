@@ -1,0 +1,375 @@
+vk:
+  # Включена ли привязка к ВК, если вы отключите привязку игроки не смогут подтверждать вход, привязывать аккаунты.
+  enabled: false
+  
+  # Юзеры ВК у которых будет админ доступ к привязанным аккаунтам
+  # У юзеров с админ-доступом есть возможности:
+  # 1. Отвязывать, менять ник, кикать используя обычные команды, и при этом не будет проверки на владение аккаунта.
+  # 2. При вводе /adminpanel вам покажет админ панель
+  admin-accounts:
+    - 123456789 #Сюда ваш id вк
+
+  # Определяет максимальное количество привязок к одному и тому же vkId. Поставьте 0 чтобы отключить лимит
+  max-vk-link: 0
+
+  # Способы подтверждения привязки аккаунта к соц. сети
+  # FROM_GAME - Игрок отправляет запрос с помощью ввода команды в соц. сети, и подтверждает привязку в игре
+  # FROM_LINK - Игрок отправляет запрос с помощью ввода команды в игре, и подтверждает привязку в соц. сети
+  link-confirm-ways:
+    - FROM_LINK
+
+  confirmation:
+    # За сколько времени игрок должен привязать аккаунт
+    # Время можно указывать в виде:
+    # y,г    - год           5y 5г
+    # mo,мес - месяц         5mo,5мес
+    # w,н    - неделя        5w,5н
+    # d,д    - день          5d 5д
+    # h,ч    - час           5h 5ч
+    # m,м    - минута        5m 5м
+    # s,с    - секунды       5с 5s
+    # ms,мс  - миллисекунды  5ms 5мс
+    # Если не указывать, то по умолчанию секунды
+    remove-delay: 120
+    code-length: 6
+    # Символы которые будут использованы в коде
+    code-characters: '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    # Может ли игрок включать/выключать подтвердение
+    can-toggle: false
+
+  enter:
+    # За сколько времени игрок должен подтвердить вход в аккаунт
+    # Время можно указывать в виде:
+    # y,г    - год           5y 5г
+    # mo,мес - месяц         5mo,5мес
+    # w,н    - неделя        5w,5н
+    # d,д    - день          5d 5д
+    # h,ч    - час           5h 5ч
+    # m,м    - минута        5m 5м
+    # s,с    - секунды       5с 5s
+    # ms,мс  - миллисекунды  5ms 5мс
+    # Если не указывать, то по умолчанию секунды
+    enter-delay: 60
+
+  # Настройка кода при восстановлении аккаунта
+  restore:
+    code-length: 7 # Длина кода
+    # Символы которые будут использованы в коде
+    code-characters: '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+  # Выключает сообщения из беседы
+  disable-conversation-commands: true
+
+  # Команды которые будут в игре, к примеру /addvk, или же /code
+  proxy-commands:
+    link-game: # Указывайте команды БЕЗ знака '/'
+      main-command: 'addvk'
+
+  # Команды которые в ВК
+  vk-commands: # Основные команды
+    link-game:
+      main-command: '/addvk'
+    enter-accept: # Id команды, не менять!
+      main-command: '/принять' # Обязательное поле
+      aliases: # Не обязательное поле, это алиасы к команде
+        - '/accept'
+    enter-decline:
+      main-command: '/отклонить'
+      aliases:
+        - '/decline'
+    change-pass:
+      main-command: '/пароль'
+      aliases:
+        - '/password'
+    unlink:
+      main-command: '/отвязать'
+      aliases:
+        - '/unlink'
+    accounts:
+      main-command: '/аккаунты'
+      aliases:
+        - '/accounts'
+    account-control:
+      main-command: '/контроль'
+      aliases:
+        - '/control'
+        - '/account-control'
+        - '/аккаунт-контроль'
+    kick:
+      main-command: '/кик'
+      aliases:
+        - '/kick'
+    restore:
+      main-command: '/восстановить'
+      aliases:
+        - '/restore'
+    code:
+      main-command: '/code'
+    confirmation-toggle:
+      main-command: '/подтверждение'
+      aliases:
+        - '/entertoggle'
+    google:
+      main-command: '/гугл'
+      aliases:
+        - '/google'
+    google-code:
+      main-command: '/гуглкод'
+      aliases:
+        - '/googlecode'
+    google-remove:
+      main-command: '/гуглотвязать'
+      aliases:
+        - '/googleunlink'
+    admin-panel:
+      main-command: '/админ-панель' #/админ-панель,/админпанель,/админ,/панель,/admin-panel,/adminpanel,/admin,/panel
+      aliases: [ admin,/adminpanel,/admin,/panel,/admin-panel,/панель,/админ,/админпанель ]
+  # Создание комманд в вк, пригодится для создания таких команд как: /информация и так далее
+  custom-commands:
+    /помощь:
+      answer: |
+        /принять -> Подтверждение входа через ВК <br>
+        /отклонить -> Отклонение входа через ВК <br>
+        /отвязать [ник] -> для отвязки аккаунта <br>
+        /аккаунты -> Контроль аккаунтов через кнопки (Есть система страниц если больше 5 аккаунтов)<br>
+        /кик [ник] -> Кикнуть игрока с сервера <br>
+        /восстановить [ник] -> Кикает игрока с сервера если он онлайн, сбрасывает пароль на рандомный, и сбрасывает сессию <br>
+        /пароль [ник] [новый пароль] -> Меняет пароль аккаунта <br>
+        /гугл [ник] -> Генерирует гугл-код и QR-Код <br>
+        /гуглкод [ник] [код] -> Используется при входе с гугл-аутентификацией <br>
+        /гуглотвязать [ник] -> Отвязывает гугл-аутентификацию <br>
+        /код (/code) -> Для привязки майнкрафт аккаунта к ВК <br>
+        /админ-панель,/админпанель,/админ,/панель,/admin-panel,/adminpanel,/admin,/panel -> Можно контролировать привязанные, не привязанные аккаунты
+    command:
+      #Если игрок ввел неизвестную команду то ему напишет то что команда не найдена
+      regex: '^/(?!.*(помощь|принять|accept|отклонить|decline|отвязать|unlink|аккаунты|accounts|контроль|control|account-control|аккаунт-контроль|кик|kick|восстановить|restore|подтверждение|entertoggle|гугл|google|гуглкод|googlecode|гуглотвязать|googleunlink|пароль|password|код|code|админ-панель|админпанель|админ|панель|admin-panel|adminpanel|admin|panel)).*$'
+      answer: 'Команда не найдена! Доступные команды: /помощь'
+      button-ignore: true
+  keyboards: # Для создания JSON клавиатур советую использовать https://severecloud.github.io/vk-keyboard/. Учтывайте что полезная нагрузка должна иметь плейсхолдеры
+    # Клавиатура в виде JSON
+    confirmation: '{"buttons":[[{"action":{"type":"callback","label":"Принять","payload":"\"/принять %name%\""},"color":"positive"},{"action":{"type":"callback","label":"Отклонить","payload":"\"/отклонить %name%\""},"color":"negative"}]],"inline":true}'
+    accounts: >  # %account_{index}% - player name, %account_{index}_color% - color that represents is player offline or online
+      {                    
+      "buttons": [
+        [
+          {
+            "action": {
+              "type": "callback",
+              "label": "%account_1%",
+              "payload": "\"/control %account_1%\""
+            },
+            "color": "%account_1_color%"
+          }
+        ],
+        [
+          {
+            "action": {
+              "type": "callback",
+              "label": "%account_2%",
+              "payload": "\"/control %account_2%\""
+            },
+            "color": "%account_2_color%"
+          }
+        ],
+        [
+          {
+            "action": {
+              "type": "callback",
+              "label": "%account_3%",
+              "payload": "\"/control %account_3%\""
+            },
+            "color": "%account_3_color%"
+          }
+        ],
+        [
+          {
+            "action": {
+              "type": "callback",
+              "label": "%account_4%",
+              "payload": "\"/control %account_4%\""
+            },
+            "color": "%account_4_color%"
+          }
+        ],
+        [
+          {
+            "action": {
+              "type": "callback",
+              "label": "%account_5%",
+              "payload": "\"/control %account_5%\""
+            },
+            "color": "%account_5_color%"
+          }
+        ],
+        [
+          {
+            "action": {
+              "type": "callback",
+              "label": "<-",
+              "payload": "\"/accounts -page %previous_page% -pageSize %pageSize% -type %type%\""
+            },
+            "color": "primary"
+          },
+          {
+            "action": {
+              "type": "callback",
+              "label": "->",
+              "payload": "\"/accounts -page %next_page% -pageSize %pageSize% -type %type%\""
+            },
+            "color": "primary"
+          }
+        ]
+      ],
+      "inline": true
+      }
+    account: >
+      {
+        "buttons": [
+          [
+            {
+              "action": {
+                "type": "callback",
+                "label": "Восстановить",
+                "payload": "\"/restore %account_name%\""
+              },
+              "color": "primary"
+            },
+            {
+              "action": {
+                "type": "callback",
+                "label": "Кикнуть",
+                "payload": "\"/kick %account_name%\""
+              },
+              "color": "primary"
+            },
+            {
+              "action": {
+                "type": "callback",
+                "label": "Отвязать",
+                "payload": "\"/unlink %account_name%\""
+              },
+              "color": "primary"
+            }
+          ]
+        ],
+        "inline": true
+      }
+    admin-panel: >
+      {
+        "buttons": [
+          [
+            {
+              "action": {
+                "type": "callback",
+                "label": "Все аккаунты",
+                "payload": "\"/accounts -type all\""
+              },
+              "color": "primary"
+            },
+            {
+              "action": {
+                "type": "callback",
+                "label": "Все привязанные аккаунты",
+                "payload": "\"/accounts -type linked\""
+              },
+              "color": "primary"
+            }
+          ],
+          [
+            {
+              "action": {
+                "type": "callback",
+                "label": "Мои аккаунты",
+                "payload": "\"/accounts\""
+              },
+              "color": "primary"
+            },
+            {
+              "action": {
+                "type": "callback",
+                "label": "Все аккаунты ВК",
+                "payload": "\"/accounts -type local_linked\""
+              },
+              "color": "primary"
+            }
+          ]
+        ],
+        "inline": true
+      }
+  vk-messages: #Для переноса строк используйте "<br>" без кавычек.
+    account-not-found: 'Аккаунт с таким не найден!'
+    # Привязка ВК
+    confirmation-success: 'Вы успешно привязали аккаунт к ВК'
+    already-linked: 'Аккаунт уже привязан к другому ВК!'
+    confirmation-sent: 'Всё почти готово. Подтверди привязку в игре через команду: /code %code%'
+    confirmation-timed-out: 'Внимание! Время кода истекло. Сгенерируйте его заного'
+    confirmation-no-code: '🤔 Произошла ошибка, скорее всего вы ошиблись в вводе кода.<br>Чтобы привязать - напишите на сервере /addvk'
+    confirmation-not-enough-arguments: 'Вы не указали код! Возможно вы забыли поставить пробел'
+    # Переключение подтверждений входа 
+    confirmation-toggle-disabled: 'Функция переключения подтверждения ВК отключена администрацией.'
+    confirmation-toggled: 'Вы успешно переключил подтверждение входа в ВК'
+    confirmation-no-player: 'Вы не указали игрока у которого нужно переключить подтверждение входа'
+    # Общее
+    not-your-account: 'Это не твой аккаунт!'
+    # Список аккаунтов 
+    no-accounts: 'У тебя нету аккаунтов'
+    no-page-accounts: 'В данной странице отсутсвуют аккаунты!'
+    accounts: 'Твои аккаунты:'
+    # Настройка аккаунта
+    account-control: 'Настройка аккаунта: %name%'
+    # Восстановление аккаунта
+    restore-not-enough-arguments: 'Вы не указали ник игрока!'
+    restored: 'Теперь пароль от аккаунта %name% - %password%'
+    # Кик аккаунта
+    kick-not-enough-arguments: 'Вы не указали ник игрока!'
+    kick-starting: '✅ Аккаунт %nick% будет кикнут с сервера в течение 5 секунд если он находится на сервере!'
+    player-offline: 'ℹ Игрок с ником %nick% не на сервере!'
+    kicked: '%nick% был кикнут из сервера'
+    # Смена пароля
+    changepass-not-enough-arguments: 'Вы не указали ник и пароль игрока!'
+    changepass-nothing-to-change: 'Ничего не изменилось!'
+    changepass-password-too-short: 'Новый пароль слишком короткий'
+    changepass-password-too-long: 'Новый пароль слишком длинный!'
+    changepass-success: 'Успешно изменён пароль игрока %name% на %password%'
+    # Подтверждение входа через ВК
+    enter-no-accounts: 'Вам не отправляли письмо для подтверждения входа 🤔'
+    enter-message: '⚠ Попытка авторизации на ваш аккаунт %nick% с IP адреса %account_ip%. Введите /принять или /отклонить, либо нажмите на кнопки'
+    enter-declined: 'Вы отменили вход'
+    enter-accepted: 'Вы успешно вошли в аккаунт!'
+    enter-disabled: 'Вы успешно выключили подтвердение входа! Будьте осторожнее'
+    enter-enabled: 'Вы успешно включили подтвердение входа! Теперь вы в безопасности'
+    # Отвязка аккаунта ВК
+    unlink-not-enough-arguments: 'Вы не указали ник игрока!'
+    unlinked: 'Вы успешно отвязали аккаунт %name%'
+    # Админ-панель
+    admin-panel: 'Админ панель:'
+    admin-panel-no-accounts: 'Не найдено аккаунтов!'
+    admin-panel-no-linked-accounts: 'Не найдено привязанных аккаунтов!'
+    admin-panel-accounts: 'Все аккаунты сервера:'
+    admin-panel-linked-accounts: 'Все привязанные аккаунты сервера'
+    # Гугл-Код-Аутентификация
+    google-disabled: 'Гугл-Аутентификация отключена!'
+    google-code-not-enough-arguments: 'Недостаточно аргументов! Правильный ввод: /гугл-код [ник] [код]'
+    google-code-not-need-enter: 'Вводить код гугл незачем!'
+    google-code-account-not-have-google: 'Ошибка! У аккаунта нету гугл-ключа'
+    google-code-account-not-need-enter: 'Вход через гугл аутентификацию не требуется!'
+    google-code-not-valid: 'Введенный код неправильный!'
+    google-code-valid: 'Введенный код правильный'
+    google-code-need-integer: 'Ошибка! Вы должны ввести 6 значную цифру!'
+    # Гугл-Генерация
+    google-not-enough-arguments: 'Недостаточно аргументов! Правильный ввод: /гугл [ник]'
+    google-generated: 'Вы успешно сгенерировали ключ Google-Authenticator: %google_key%'
+    google-regenerated: 'Внимание! Вы заного сгенерировали ключ Google Authenticator: %google_key%'
+    google-error: 'Произошла ошибка! Сообщите администратору!'
+    # Гугл-Отвязка
+    google-unlink-not-enough-arguments: 'Недостаточно аргументов! Правильный ввод: /гуглотвязать [ник]'
+    google-unlink-not-have-google: 'Ошибка! У аккаунта нету гугл ключа'
+    google-unlinked: 'Гугл успешно сброшен!'
+
+    command-cooldown: 'Вы слишком часто используете данную команду! Попробуйте позже.'
+
+    not-enough-permission: 'Недостаточно прав для использования этой команды! Вы должны добавить себя в список админов!'
+    
+    unresolved-argument: 'Вы не указали аргумент: %argument_name%'
+    unresolved-number: 'Ожидалось число, но вы указали %input%'
+    command-invocation: 'При вводе команды произошла ошибка, сообщите администрации'

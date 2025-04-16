@@ -1,0 +1,4 @@
+name: AuthCraft
+version: '1.0-SNAPSHOT'
+main: com.httydcraft.authCraft.AuthCraft
+api-version: '1.18'

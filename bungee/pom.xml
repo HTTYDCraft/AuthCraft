@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.httydcraft.authcraft</groupId>
+        <artifactId>main</artifactId>
+        <version>v1.0</version>
+    </parent>
+    <artifactId>bungee</artifactId>
+
+    <repositories>
+        <repository>
+            <id>maven-snapshots</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+
+        <repository>
+            <id>bungeecord-repo</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- Core auth -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
+        <!-- BungeeCord API -->
+        <dependency>
+            <groupId>net.md-5</groupId>
+            <artifactId>bungeecord-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Lamp -->
+        <dependency>
+            <groupId>com.github.Revxrsal.Lamp</groupId>
+            <artifactId>bungee</artifactId>
+        </dependency>
+
+        <!-- Adventure BungeeCord platform -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-platform-bungeecord</artifactId>
+        </dependency>
+
+        <!-- VK API -->
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks</groupId>
+            <artifactId>VK-API-PluginAdapter</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Telegram API -->
+        <dependency>
+            <groupId>com.github.pengrad</groupId>
+            <artifactId>java-telegram-bot-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- NanoLimboPlugin API -->
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks.NanoLimboPlugin</groupId>
+            <artifactId>api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Libby -->
+        <dependency>
+            <groupId>com.alessiodp.libby</groupId>
+            <artifactId>libby-bungee</artifactId>
+        </dependency>
+
+        <!-- Google Guava: URL: https://github.com/google/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <!-- Google Flogger: URL: https://github.com/google/flogger -->
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>flogger</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>flogger-system-backend</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>google-extensions</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <configuration>
+                    <relocations combine.children="append">
+                        <relocation>
+                            <pattern>net.kyori</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.net.kyori</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.slf4j</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.slf4j</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

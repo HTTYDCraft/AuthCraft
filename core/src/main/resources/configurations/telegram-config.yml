@@ -1,0 +1,315 @@
+telegram:
+  # Включена ли привязка к Telegram, если вы отключите привязку игроки не смогут подтверждать вход, привязывать аккаунты.
+  enabled: false
+  # Токен телеграм бота.
+  token: 'telegram token here'
+  
+  # Пользователи Telegram у которых будет админ доступ к привязанным аккаунтам
+  # У пользователей с админ-доступом есть возможности:
+  # 1. Отвязывать, менять ник, кикать используя обычные команды, и при этом не будет проверки на владение аккаунта.
+  # 2. При вводе /adminpanel вам покажет админ панель
+  admin-accounts:
+    - 123456789 #Сюда ваш id Telegram
+
+  # Определяет максимальное количество привязок к одному и тому же телеграмму. Поставьте 0 чтобы отключить лимит
+  max-telegram-link: 0
+
+  # Способы подтверждения привязки аккаунта к соц. сети
+  # FROM_GAME - Игрок отправляет запрос с помощью ввода команды в соц. сети, и подтверждает привязку в игре
+  # FROM_LINK - Игрок отправляет запрос с помощью ввода команды в игре, и подтверждает привязку в соц. сети
+  link-confirm-ways:
+    - FROM_LINK
+
+  confirmation:
+    # За сколько времени игрок должен привязать аккаунт
+    # Время можно указывать в виде:
+    # y,г    - год           5y 5г
+    # mo,мес - месяц         5mo,5мес
+    # w,н    - неделя        5w,5н
+    # d,д    - день          5d 5д
+    # h,ч    - час           5h 5ч
+    # m,м    - минута        5m 5м
+    # s,с    - секунды       5с 5s
+    # ms,мс  - миллисекунды  5ms 5мс
+    # Если не указывать, то по умолчанию секунды
+    remove-delay: 120
+    code-length: 6
+    # Символы которые будут использованы в коде
+    code-characters: '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    # Может ли игрок включать/выключать подтверждение
+    can-toggle: false
+
+  enter:
+    # За сколько времени игрок должен подтвердить вход в аккаунт
+    # Время можно указывать в виде:
+    # y,г    - год           5y 5г
+    # mo,мес - месяц         5mo,5мес
+    # w,н    - неделя        5w,5н
+    # d,д    - день          5d 5д
+    # h,ч    - час           5h 5ч
+    # m,м    - минута        5m 5м
+    # s,с    - секунды       5с 5s
+    # ms,мс  - миллисекунды  5ms 5мс
+    # Если не указывать, то по умолчанию секунды
+    enter-delay: 60
+
+  # Настройка кода при восстановлении аккаунта
+  restore:
+    code-length: 7 # Длина кода
+    # Символы которые будут использованы в коде
+    code-characters: '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+  # Команды которые будут в игре, к примеру /addtg, или же /code
+  proxy-commands:
+    link-game: # Указывайте команды БЕЗ знака '/'
+      main-command: 'addtg'
+
+  # Команды в телеграме
+  telegram-commands: # Основные команды
+    link-game:
+      main-command: '/addtg'
+    enter-accept: # Id команды, не менять!
+      main-command: '/принять' # Обязательное поле
+      aliases: # Не обязательное поле, это алиасы к команде
+        - '/accept'
+    enter-decline:
+      main-command: '/отклонить'
+      aliases:
+        - '/decline'
+    change-pass:
+      main-command: '/пароль'
+      aliases:
+        - '/password'
+    unlink:
+      main-command: '/отвязать'
+      aliases:
+        - '/unlink'
+    accounts:
+      main-command: '/аккаунты'
+      aliases:
+        - '/accounts'
+    account-control:
+      main-command: '/контроль'
+      aliases:
+        - '/control'
+        - '/account-control'
+        - '/аккаунт-контроль'
+    kick:
+      main-command: '/кик'
+      aliases:
+        - '/kick'
+    restore:
+      main-command: '/восстановить'
+      aliases:
+        - '/restore'
+    code:
+      main-command: '/code'
+    confirmation-toggle:
+      main-command: '/подтверждение'
+      aliases:
+        - '/entertoggle'
+    google:
+      main-command: '/гугл'
+      aliases:
+        - '/google'
+    google-code:
+      main-command: '/гуглкод'
+      aliases:
+        - '/googlecode'
+    google-remove:
+      main-command: '/гуглотвязать'
+      aliases:
+        - '/googleunlink'
+    admin-panel:
+      main-command: '/админ-панель' #/админ-панель,/админпанель,/админ,/панель,/admin-panel,/adminpanel,/admin,/panel
+      aliases: [ admin,/adminpanel,/admin,/panel,/admin-panel,/панель,/админ,/админпанель ]
+  # Создание комманд в Telegram, пригодится для создания таких команд как: /информация и так далее
+  custom-commands:
+    /помощь:
+      answer: |
+        /принять -> Подтверждение входа через Telegram 
+        /отклонить -> Отклонение входа через Telegram 
+        /отвязать [ник] -> для отвязки аккаунта 
+        /аккаунты -> Контроль аккаунтов через кнопки (Есть система страниц если больше 5 аккаунтов)
+        /кик [ник] -> Кикнуть игрока с сервера 
+        /восстановить [ник] -> Кикает игрока с сервера если он онлайн, сбрасывает пароль на рандомный, и сбрасывает сессию 
+        /пароль [ник] [новый пароль] -> Меняет пароль аккаунта 
+        /гугл [ник] -> Генерирует гугл-код и QR-Код 
+        /гуглкод [ник] [код] -> Используется при входе с гугл-аутентификацией 
+        /гуглотвязать [ник] -> Отвязывает гугл-аутентификацию 
+        /код (/code) -> Для привязки майнкрафт аккаунта к Telegram 
+        /админ-панель,/админпанель,/админ,/панель,/admin-panel,/adminpanel,/admin,/panel -> Можно контролировать привязанные, не привязанные аккаунты
+    command:
+      #Если игрок ввел неизвестную команду то ему напишет то что команда не найдена
+      regex: '^/(?!.*(помощь|принять|accept|отклонить|decline|отвязать|unlink|аккаунты|accounts|контроль|control|account-control|аккаунт-контроль|кик|kick|восстановить|restore|подтверждение|entertoggle|гугл|google|гуглкод|googlecode|гуглотвязать|googleunlink|пароль|password|код|code|админ-панель|админпанель|админ|панель|admin-panel|adminpanel|admin|panel)).*$'
+      answer: 'Команда не найдена! Доступные команды: /помощь'
+      button-ignore: true
+  keyboards:
+    confirmation: '{"inline_keyboard":[[{"text":"Принять","callback_data":"/принять %name%"},{"text":"Отклонить","callback_data":"/отклонить %name%"}]]}'
+    accounts: >  # %account_{index}% - player name, %account_{index}_color% - color that represents is player offline or online
+      {                    
+      "inline_keyboard": [
+        [
+          {
+            "text": "%account_1%",
+            "callback_data": "/control %account_1%"
+          }
+        ],
+        [
+          {
+            "text": "%account_2%",
+            "callback_data": "/control %account_2%"
+          }
+        ],
+        [
+          {
+            "text": "%account_3%",
+            "callback_data": "/control %account_3%"
+          }
+        ],
+        [
+          {
+            "text": "%account_4%",
+            "callback_data": "/control %account_4%"
+          }
+        ],
+        [
+          {
+            "text": "%account_5%",
+            "callback_data": "/control %account_5%"
+          }
+        ],
+        [
+          {
+            "text": "<-",
+            "callback_data": "/accounts -page %prev_page% -pageSize %pageSize% -type %type%"
+          },
+          {
+            "text": "->",
+            "callback_data": "/accounts -page %next_page% -pageSize %pageSize% -type %type%"
+          }
+        ]
+      ]}
+    account: >
+      {
+        "inline_keyboard": [
+          [
+            {
+              "text": "Восстановить",
+              "callback_data": "/restore %account_name%"
+            },
+            {
+              "text": "Кикнуть",
+              "callback_data": "/kick %account_name%"
+            },
+            {
+              "text": "Отвязать",
+              "callback_data": "/unlink %account_name%"
+            }
+          ]
+        ]
+      }
+    admin-panel: >
+      {
+        "inline_keyboard": [
+          [
+            {
+              "text": "Все аккаунты",
+              "callback_data": "/accounts -type all"
+            },
+            {
+              "text": "Все привязанные аккаунты",
+              "callback_data": "/accounts -type linked"
+            }
+          ],
+          [
+            {
+              "text": "Мои аккаунты",
+              "callback_data": "/accounts"
+            },
+            {
+              "text": "Все аккаунты Телеграм",
+              "callback_data": "/accounts -type local_linked"
+            }
+          ]
+        ]
+      }
+  telegram-messages:
+    account-not-found: 'Аккаунт с таким не найден!'
+    # Привязка Telegram
+    confirmation-success: 'Вы успешно привязали аккаунт к Telegram'
+    already-linked: 'Аккаунт уже привязан к другому Telegram!'
+    confirmation-sent: 'Всё почти готово. Подтверди привязку в игре через команду: /code %code%'
+    confirmation-timed-out: 'Внимание! Время кода истекло. Сгенерируйте его заного'
+    confirmation-no-code:
+       🤔 Произошла ошибка, скорее всего вы ошиблись в вводе кода.
+       Чтобы привязать - напишите на сервере /addtg
+    confirmation-not-enough-arguments: 'Вы не указали код! Возможно вы забыли поставить пробел'
+    # Переключение подтверждений входа 
+    confirmation-toggle-disabled: 'Функция отключения подтверждения Telegram отключена администрацией.'
+    confirmation-toggled: 'Вы успешно переключил подтверждение входа в Telegram'
+    confirmation-no-player: 'Вы не указали игрока у которого нужно переключить подтверждение входа'
+    # Общее
+    not-your-account: 'Это не твой аккаунт!'
+    # Список аккаунтов 
+    no-accounts: 'У тебя нету аккаунтов'
+    no-page-accounts: 'В данной странице отсутсвуют аккаунты!'
+    accounts: 'Твои аккаунты:'
+    # Настройка аккаунта
+    account-control: 'Настройка аккаунта: %name%'
+    # Восстановление аккаунта
+    restore-not-enough-arguments: 'Вы не указали ник игрока!'
+    restored: 'Теперь пароль от аккаунта %name% - %password%'
+    # Кик аккаунта
+    kick-not-enough-arguments: 'Вы не указали ник игрока!'
+    kick-starting: '✅ Аккаунт %nick% будет кикнут с сервера в течение 5 секунд если он находится на сервере!'
+    player-offline: 'ℹ Игрок с ником %nick% не на сервере!'
+    kicked: '%nick% был кикнут из сервера'
+    # Смена пароля
+    changepass-not-enough-arguments: 'Вы не указали ник и пароль игрока!'
+    changepass-nothing-to-change: 'Ничего не изменилось!'
+    changepass-password-too-short: 'Новый пароль слишком короткий'
+    changepass-password-too-long: 'Новый пароль слишком длинный!'
+    changepass-success: 'Успешно изменён пароль игрока %name% на %password%'
+    # Подтверждение входа через Telegram
+    enter-no-accounts: 'Вам не отправляли письмо для подтверждения входа 🤔'
+    enter-message: '⚠ Попытка авторизации на ваш аккаунт %nick% с IP адреса %account_ip%. Введите /принять или /отклонить, либо нажмите на кнопки'
+    enter-declined: 'Вы отменили вход'
+    enter-accepted: 'Вы успешно вошли в аккаунт!'
+    enter-disabled: 'Вы успешно выключили подтвердение входа! Будьте осторожнее'
+    enter-enabled: 'Вы успешно включили подтвердение входа! Теперь вы в безопасности'
+    # Отвязка аккаунта Telegram
+    unlink-not-enough-arguments: 'Вы не указали ник игрока!'
+    unlinked: 'Вы успешно отвязали аккаунт %name%'
+    # Админ-панель
+    admin-panel: 'Админ панель:'
+    admin-panel-no-accounts: 'Не найдено аккаунтов!'
+    admin-panel-no-linked-accounts: 'Не найдено привязанных аккаунтов!'
+    admin-panel-accounts: 'Все аккаунты сервера:'
+    admin-panel-linked-accounts: 'Все привязанные аккаунты сервера'
+    # Гугл-Код-Аутентификация
+    google-disabled: 'Гугл-Аутентификация отключена!'
+    google-code-not-enough-arguments: 'Недостаточно аргументов! Правильный ввод: /гугл-код [ник] [код]'
+    google-code-not-need-enter: 'Вводить код гугл незачем!'
+    google-code-account-not-have-google: 'Ошибка! У аккаунта нету гугл-ключа'
+    google-code-account-not-need-enter: 'Вход через гугл аутентификацию не требуется!'
+    google-code-not-valid: 'Введенный код неправильный!'
+    google-code-valid: 'Введенный код правильный'
+    google-code-need-integer: 'Ошибка! Вы должны ввести 6 значную цифру!'
+    # Гугл-Генерация
+    google-not-enough-arguments: 'Недостаточно аргументов! Правильный ввод: /гугл [ник]'
+    google-generated: 'Вы успешно сгенерировали ключ Google-Authenticator: %google_key%'
+    google-regenerated: 'Внимание! Вы заного сгенерировали ключ Google Authenticator: %google_key%'
+    google-error: 'Произошла ошибка! Сообщите администратору!'
+    # Гугл-Отвязка
+    google-unlink-not-enough-arguments: 'Недостаточно аргументов! Правильный ввод: /гуглотвязать [ник]'
+    google-unlink-not-have-google: 'Ошибка! У аккаунта нету гугл ключа'
+    google-unlinked: 'Гугл успешно сброшен!'
+
+    command-cooldown: 'Вы слишком часто используете данную команду! Попробуйте позже.'
+
+    not-enough-permission: 'Недостаточно прав для использования этой команды! Вы должны добавить себя в список админов!'
+    
+    unresolved-argument: 'Вы не указали аргумент: %argument_name%'
+    unresolved-number: 'Ожидалось число, но вы указали %input%'
+    command-invocation: 'При вводе команды произошла ошибка, сообщите администрации'

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.httydcraft.authcraft</groupId>
+        <artifactId>main</artifactId>
+        <version>v1.0</version>
+    </parent>
+    <artifactId>core</artifactId>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>16</source>
+                    <target>16</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+
+        <!-- Internal API -->
+        <dependency>
+            <groupId>com.httydcraft.auth</groupId>
+            <artifactId>api</artifactId>
+        </dependency>
+
+        <!-- BCrypt -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+        </dependency>
+
+        <!-- QR library -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+        </dependency>
+
+        <!-- Configuration library for Configurate -->
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks.ConfigurationLibrary</groupId>
+            <artifactId>configurate</artifactId>
+        </dependency>
+
+        <!-- Configurate -->
+        <dependency>
+            <groupId>org.spongepowered</groupId>
+            <artifactId>configurate-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.spongepowered</groupId>
+            <artifactId>configurate-yaml</artifactId>
+        </dependency>
+
+        <!-- Lamp -->
+        <dependency>
+            <groupId>com.github.Revxrsal.Lamp</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks</groupId>
+            <artifactId>VKLampModule</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks</groupId>
+            <artifactId>TelegramLampModule</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.Revxrsal.Lamp</groupId>
+            <artifactId>jda</artifactId>
+        </dependency>
+
+        <!-- VK API -->
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks</groupId>
+            <artifactId>VK-API-PluginAdapter</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Telegram API -->
+        <dependency>
+            <groupId>com.github.pengrad</groupId>
+            <artifactId>java-telegram-bot-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Mini message -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-minimessage</artifactId>
+        </dependency>
+
+        <!-- Password4j -->
+        <dependency>
+            <groupId>com.password4j</groupId>
+            <artifactId>password4j</artifactId>
+        </dependency>
+
+        <!-- Yaml Config Updater -->
+        <dependency>
+            <groupId>ru.vyarus</groupId>
+            <artifactId>yaml-config-updater</artifactId>
+        </dependency>
+
+        <!-- Java Discord API -->
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- NanoLimboPlugin API -->
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks.NanoLimboPlugin</groupId>
+            <artifactId>api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Google Guava: URL: https://github.com/google/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <!-- Google Flogger: URL: https://github.com/google/flogger -->
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>flogger</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>flogger-system-backend</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>google-extensions</artifactId>
+        </dependency>
+
+    </dependencies>
+</project>

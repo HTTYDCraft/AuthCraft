@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.httydcraft.authcraft</groupId>
+        <artifactId>main</artifactId>
+        <version>v1.0</version>
+    </parent>
+    <groupId>com.httydcraft.auth</groupId>
+    <artifactId>api</artifactId>
+
+    <repositories>
+        <repository>
+            <id>maven-snapshots</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- BCrypt library -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+        </dependency>
+
+        <!-- MultiMessenger library -->
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks.MultiMessenger</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks.MultiMessenger</groupId>
+            <artifactId>vk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks.MultiMessenger</groupId>
+            <artifactId>telegram</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks.MultiMessenger</groupId>
+            <artifactId>discord</artifactId>
+        </dependency>
+
+        <!-- Adventure platform -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-platform-api</artifactId>
+        </dependency>
+
+        <!-- Adventure serializers -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-legacy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-plain</artifactId>
+        </dependency>
+
+        <!-- ORMLite -->
+        <dependency>
+            <groupId>com.j256.ormlite</groupId>
+            <artifactId>ormlite-jdbc</artifactId>
+        </dependency>
+
+        <!-- GoogleAuthenticator library -->
+        <dependency>
+            <groupId>com.warrenstrange</groupId>
+            <artifactId>googleauth</artifactId>
+        </dependency>
+
+        <!-- Event Bus -->
+        <dependency>
+            <groupId>com.github.Revxrsal</groupId>
+            <artifactId>EventBus</artifactId>
+        </dependency>
+
+        <!-- Configuration library core -->
+        <dependency>
+            <groupId>com.github.HTTYDCraft-Forks.ConfigurationLibrary</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
+        <!-- Libby runtime dependency management -->
+        <dependency>
+            <groupId>com.alessiodp.libby</groupId>
+            <artifactId>libby-core</artifactId>
+        </dependency>
+
+        <!-- Google Guava: URL: https://github.com/google/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <!-- Google Flogger: URL: https://github.com/google/flogger -->
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>flogger</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>flogger-system-backend</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.flogger</groupId>
+            <artifactId>google-extensions</artifactId>
+        </dependency>
+
+    </dependencies>
+</project>

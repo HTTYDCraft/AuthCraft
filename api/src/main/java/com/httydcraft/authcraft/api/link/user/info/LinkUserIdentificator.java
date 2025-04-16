@@ -1,0 +1,94 @@
+package com.httydcraft.authcraft.api.link.user.info;
+
+import com.httydcraft.authcraft.api.link.user.info.impl.UserNumberIdentificator;
+import com.httydcraft.authcraft.api.link.user.info.impl.UserStringIdentificator;
+import com.httydcraft.authcraft.api.util.Castable;
+
+public interface LinkUserIdentificator extends Castable<LinkUserIdentificator> {
+    /**
+     * Wraps raw id to {@link LinkUserIdentificator}. If raw id is can be parsed by {@link Long#parseLong(String)}, this method will return
+     * {@link UserNumberIdentificator}, or else {@link UserStringIdentificator}.
+     *
+     * @param linkUserId raw user id
+     * @return {@link UserNumberIdentificator} if id can be parsed by {@link Long#parseLong(String)} or else {@link UserStringIdentificator}
+     */
+    static LinkUserIdentificator ofParsed(String linkUserId) {
+        try {
+            return of(Long.parseLong(linkUserId));
+        } catch(NumberFormatException e) {
+            return of(linkUserId);
+        }
+    }
+
+    /**
+     * Wraps {@link Long}
+     *
+     * @return {@link UserNumberIdentificator}
+     */
+    static LinkUserIdentificator of(long userId) {
+        return new UserNumberIdentificator(userId);
+    }
+
+    /**
+     * Wraps {@link String}
+     *
+     * @return {@link UserStringIdentificator}
+     */
+    static LinkUserIdentificator of(String userId) {
+        return new UserStringIdentificator(userId);
+    }
+
+    /**
+     * Returns identificator of user as number, may throw
+     * {@link UnsupportedOperationException} if it stores id as {@link String} or
+     * more complex data
+     *
+     * @return Identificator as number
+     */
+    default long asNumber() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Returns identificator as string, if id stores as number, it will convert
+     * number to string without throwing {@link UnsupportedOperationException},
+     * because it will use {@linkplain String#valueOf}
+     *
+     * @return Identificator as string
+     */
+    default String asString() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Returns result of casting object to number. May throw
+     * {@link NumberFormatException} if cannot format number.
+     *
+     * @return Is identificator can be converted to number
+     */
+    default boolean isNumber() {
+        return false;
+    }
+
+    /**
+     * Set identificator as number, may throw {@link UnsupportedOperationException}
+     * if cannot set identificator as number
+     *
+     * @param userId New identificator
+     * @return this {@link LinkUserIdentificator}
+     */
+    default LinkUserIdentificator setNumber(long userId) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Set identificator as string, may throw {@link UnsupportedOperationException}
+     * if cannot set identificator as string
+     *
+     * @param userId New identificator
+     * @return this {@link LinkUserIdentificator}
+     */
+    default LinkUserIdentificator setString(String userId) {
+        throw new UnsupportedOperationException();
+    }
+}

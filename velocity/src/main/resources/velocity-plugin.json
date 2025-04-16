@@ -1,0 +1,23 @@
+{
+  "id": "authcraft",
+  "name": "AuthCraft",
+  "version": "${project.version}",
+  "authors": [
+    "BezzubickMCPlay"
+  ],
+  "dependencies": [
+    {
+      "id": "vk-api",
+      "optional": true
+    },
+    {
+      "id": "telegram-bot-api",
+      "optional": true
+    },
+    {
+      "id": "nanolimbovelocity",
+      "optional": true
+    }
+  ],
+  "main": "me.mastercapexd.auth.velocity.VelocityAuthPluginBootstrap"
+}

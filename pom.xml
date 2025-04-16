@@ -1,0 +1,522 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.httydcraft.authcraft</groupId>
+    <artifactId>main</artifactId>
+    <packaging>pom</packaging>
+    <version>v1.0</version>
+    <modules>
+        <module>api</module>
+        <module>core</module>
+        <module>bungee</module>
+        <module>velocity</module>
+    </modules>
+
+    <properties>
+        <!-- Manifest -->
+        <manifest.contact>https://vk.me/bbaty45/</manifest.contact>
+        <manifest.developer>httydcraft</manifest.developer>
+        <manifest.version>${project.version}</manifest.version>
+
+        <!-- Building -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>8</java.version>
+        <maven.compiler.useIncrementalCompilation>true</maven.compiler.useIncrementalCompilation>
+        <dependencies.relocation.package>com.httydcraft.auth.lib</dependencies.relocation.package>
+
+        <!-- Dependencies -->
+        <!-- Crypto -->
+        <jbcrypt.version>0.4</jbcrypt.version>
+        <password4j.version>1.8.2</password4j.version>
+
+        <!-- TOTP -->
+        <totp-auth.version>1.5.0</totp-auth.version>
+        <zxing-qr-generator.version>3.5.3</zxing-qr-generator.version>
+
+        <!-- Adventure -->
+        <minimessage.version>4.17.0</minimessage.version>
+        <adventure-serializer.version>4.17.0</adventure-serializer.version>
+        <adventure-platform.version>4.3.4</adventure-platform.version>
+        <adventure-bungee.version>4.3.4</adventure-bungee.version>
+
+        <!-- Configuration -->
+        <configuration-library.version>v1.0</configuration-library.version>
+        <configurate.version>4.1.2</configurate.version>
+        <yaml-config-updater.version>1.4.2</yaml-config-updater.version>
+
+        <!-- Command -->
+        <lamp.version>3.3.6</lamp.version>
+        <lamp-vk.version>v1.0</lamp-vk.version>
+        <lamp-telegram.version>v1.1</lamp-telegram.version>
+
+        <telegram-api.version>6.9.1</telegram-api.version>
+        <jda.version>5.0.0-beta.24</jda.version>
+        <vk-api.version>v1.0</vk-api.version>
+
+        <bungeecord.version>1.20-R0.2</bungeecord.version>
+
+        <velocity-api.version>3.1.1</velocity-api.version>
+        <velocity-proxy.version>3.3.0-3554abc</velocity-proxy.version>
+
+        <auth-api.version>${project.version}</auth-api.version>
+        <ormlite.version>6.1</ormlite.version>
+        <multimessenger.version>v1.0</multimessenger.version>
+        <event-bus.version>1.3</event-bus.version>
+        <libby.version>2.0.0-SNAPSHOT</libby.version>
+        <nanolimbo.version>v1.0</nanolimbo.version>
+
+        <!-- Maven plugins -->
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <maven.shade.plugin.version>3.6.0</maven.shade.plugin.version>
+        <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
+
+        <guava.version>33.3.1-jre</guava.version>
+        <flogger.version>0.8</flogger.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Internal modules -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.httydcraft.auth</groupId>
+                <artifactId>api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- BCrypt library -->
+            <dependency>
+                <groupId>org.mindrot</groupId>
+                <artifactId>jbcrypt</artifactId>
+                <version>${jbcrypt.version}</version>
+            </dependency>
+            <!-- Password4j -->
+            <dependency>
+                <groupId>com.password4j</groupId>
+                <artifactId>password4j</artifactId>
+                <version>${password4j.version}</version>
+            </dependency>
+            <!-- MultiMessenger library -->
+            <dependency>
+	            <groupId>com.github.HTTYDCraft-Forks.MultiMessenger</groupId>
+                <artifactId>core</artifactId>
+                <version>${multimessenger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.HTTYDCraft-Forks.MultiMessenger</groupId>
+                <artifactId>vk</artifactId>
+                <version>${multimessenger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.HTTYDCraft-Forks.MultiMessenger</groupId>
+                <artifactId>telegram</artifactId>
+                <version>${multimessenger.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.github.pengrad</groupId>
+                        <artifactId>java-telegram-bot-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.github.HTTYDCraft-Forks.MultiMessenger</groupId>
+                <artifactId>discord</artifactId>
+                <version>${multimessenger.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>JDA</artifactId>
+                        <groupId>net.dv8tion</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- Lamp -->
+            <dependency>
+                <groupId>com.github.Revxrsal.Lamp</groupId>
+                <artifactId>common</artifactId>
+                <version>${lamp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.HTTYDCraft-Forks</groupId>
+	            <artifactId>VKLampModule</artifactId>
+                <version>${lamp-vk.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.vk.api</groupId>
+                        <artifactId>sdk</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.github.HTTYDCraft-Forks</groupId>
+                <artifactId>TelegramLampModule</artifactId>
+                <version>${lamp-telegram.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.Revxrsal.Lamp</groupId>
+                <artifactId>jda</artifactId>
+                <version>${lamp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.Revxrsal.Lamp</groupId>
+                <artifactId>bungee</artifactId>
+                <version>${lamp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.Revxrsal.Lamp</groupId>
+                <artifactId>velocity</artifactId>
+                <version>${lamp.version}</version>
+            </dependency>
+
+            <!-- Adventure -->
+            <dependency>
+                <groupId>net.kyori</groupId>
+                <artifactId>adventure-platform-api</artifactId>
+                <version>${adventure-platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.kyori</groupId>
+                <artifactId>adventure-text-serializer-gson</artifactId>
+                <version>${adventure-serializer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.kyori</groupId>
+                <artifactId>adventure-text-serializer-legacy</artifactId>
+                <version>${adventure-serializer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.kyori</groupId>
+                <artifactId>adventure-text-serializer-plain</artifactId>
+                <version>${adventure-serializer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.kyori</groupId>
+                <artifactId>adventure-platform-bungeecord</artifactId>
+                <version>${adventure-bungee.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.kyori</groupId>
+                <artifactId>adventure-text-minimessage</artifactId>
+                <version>${minimessage.version}</version>
+            </dependency>
+
+            <!-- ORMLite -->
+            <dependency>
+                <groupId>com.j256.ormlite</groupId>
+                <artifactId>ormlite-jdbc</artifactId>
+                <version>${ormlite.version}</version>
+            </dependency>
+
+            <!-- TOTP -->
+            <dependency>
+                <groupId>com.warrenstrange</groupId>
+                <artifactId>googleauth</artifactId>
+                <version>${totp-auth.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.zxing</groupId>
+                <artifactId>core</artifactId>
+                <version>${zxing-qr-generator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.zxing</groupId>
+                <artifactId>javase</artifactId>
+                <version>${zxing-qr-generator.version}</version>
+            </dependency>
+
+            <!-- Event Bus -->
+            <dependency>
+                <groupId>com.github.Revxrsal</groupId>
+                <artifactId>EventBus</artifactId>
+                <version>${event-bus.version}</version>
+            </dependency>
+
+            <!-- ConfigurationLibrary -->
+            <dependency>
+                <groupId>com.github.HTTYDCraft-Forks.ConfigurationLibrary</groupId>
+                <artifactId>core</artifactId>
+                <version>${configuration-library.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.HTTYDCraft-Forks.ConfigurationLibrary</groupId>
+                <artifactId>configurate</artifactId>
+                <version>${configuration-library.version}</version>
+            </dependency>
+
+            <!-- Configurate -->
+            <dependency>
+                <groupId>org.spongepowered</groupId>
+                <artifactId>configurate-core</artifactId>
+                <version>${configurate.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.spongepowered</groupId>
+                <artifactId>configurate-yaml</artifactId>
+                <version>${configurate.version}</version>
+            </dependency>
+
+            <!-- Yaml Config Updater -->
+            <dependency>
+                <groupId>ru.vyarus</groupId>
+                <artifactId>yaml-config-updater</artifactId>
+                <version>${yaml-config-updater.version}</version>
+            </dependency>
+
+            <!-- Libby -->
+            <dependency>
+                <groupId>com.alessiodp.libby</groupId>
+                <artifactId>libby-core</artifactId>
+                <version>${libby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alessiodp.libby</groupId>
+                <artifactId>libby-bungee</artifactId>
+                <version>${libby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alessiodp.libby</groupId>
+                <artifactId>libby-velocity</artifactId>
+                <version>${libby.version}</version>
+            </dependency>
+
+            <!-- BungeeCord API -->
+            <dependency>
+                <groupId>net.md-5</groupId>
+                <artifactId>bungeecord-api</artifactId>
+                <version>${bungeecord.version}</version>
+            </dependency>
+
+            <!-- Velocity -->
+            <dependency>
+                <groupId>com.velocitypowered</groupId>
+                <artifactId>velocity-api</artifactId>
+                <version>${velocity-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.httydcraft</groupId>
+                <artifactId>velocity-proxy</artifactId>
+                <version>${velocity-proxy.version}</version>
+            </dependency>
+
+            <!-- VK API -->
+            <dependency>
+                <groupId>com.github.HTTYDCraft-Forks</groupId>
+                <artifactId>VK-API-PluginAdapter</artifactId>
+                <version>${vk-api.version}</version>
+            </dependency>
+
+            <!-- Telegram API -->
+            <dependency>
+                <groupId>com.github.pengrad</groupId>
+                <artifactId>java-telegram-bot-api</artifactId>
+                <version>${telegram-api.version}</version>
+            </dependency>
+
+            <!-- Java Discord API -->
+            <dependency>
+                <groupId>net.dv8tion</groupId>
+                <artifactId>JDA</artifactId>
+                <version>${jda.version}</version>
+            </dependency>
+
+            <!-- NanoLimbo -->
+            <dependency>
+                <groupId>com.github.HTTYDCraft-Forks.NanoLimboPlugin</groupId>
+                <artifactId>api</artifactId>
+                <version>${nanolimbo.version}</version>
+            </dependency>
+
+            <!-- Google Guava: URL: https://github.com/google/guava -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+
+            <!-- Google Flogger: URL: https://github.com/google/flogger -->
+            <dependency>
+                <groupId>com.google.flogger</groupId>
+                <artifactId>flogger</artifactId>
+                <version>${flogger.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.flogger</groupId>
+                <artifactId>flogger-system-backend</artifactId>
+                <version>${flogger.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.flogger</groupId>
+                <artifactId>google-extensions</artifactId>
+                <version>${flogger.version}</version>
+            </dependency>
+
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <finalName>${project.name}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <!-- Maven compiler plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-proc:none</arg>
+                    </compilerArgs>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+            <!-- Maven shade plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>${maven.shade.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <minimizeJar>true</minimizeJar>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                    <filters>
+                        <filter>
+                            <artifact>org.spongepowered:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/SPONGEPO.RSA</exclude>
+                            </excludes>
+                        </filter>
+                        <filter>
+                            <artifact>com.alessiodp.libby:libby-core</artifact>
+                            <includes>
+                                <include>com/alessiodp/libby/**</include>
+                            </includes>
+                        </filter>
+                    </filters>
+                    <relocations>
+                        <relocation>
+                            <pattern>revxrsal.commands</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.revxrsal.commands</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.objectweb.asm</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.objectweb.asm</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.yaml.snakeyaml</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.yaml.snakeyaml</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.spongepowered.configurate</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.spongepowered.configurate</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.mindrot.jbcrypt</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.mindrot.jbcrypt</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.intellij</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.intellij</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.jetbrains</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.jetbrains</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.checkerframework</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.checkerframework</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.apache.http</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.apache.http</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.apache.commons</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.org.apache.commons</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>io.leangen.geantyref</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.io.leangen.geantyref</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>io.github.revxrsal.eventbus</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.io.github.revxrsal.eventbus</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.warrenstrange.googleauth</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.com.warrenstrange.googleauth</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.j256.ormlite</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.com.j256.ormlite</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.google.zxing</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.com.google.zxing</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.google.errorprone</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.com.google.errorprone</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.password4j</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.com.password4j</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>ru.vyarus.yaml.updater</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.ru.vyarus.yaml.updater</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.alessiodp.libby</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.com.alessiodp.libby</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>net.dv8tion</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.net.dv8tion</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.grack.nanojson</pattern>
+                            <shadedPattern>${dependencies.relocation.package}.com.grack.nanojson</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+            </plugin>
+            <!-- Maven source plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven.source.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
