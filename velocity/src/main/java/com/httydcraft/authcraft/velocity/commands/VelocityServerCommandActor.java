@@ -14,8 +14,7 @@ import revxrsal.commands.velocity.VelocityCommandActor;
  * Velocity-specific implementation of a command actor.
  * Implements {@link ServerCommandActor} and {@link MessageableCommandActor} to handle command execution and messaging.
  */
-public class VelocityServerCommandActor implements ServerCommandActor, MessageableCommand算法
-Actor {
+public class VelocityServerCommandActor implements ServerCommandActor, MessageableCommandActor {
     private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
     private final VelocityCommandActor actor;
 

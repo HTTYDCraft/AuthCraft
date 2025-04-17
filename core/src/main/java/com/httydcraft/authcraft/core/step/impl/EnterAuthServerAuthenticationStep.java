@@ -78,25 +78,31 @@ public class EnterAuthServerAuthenticationStep extends AuthenticationStepTemplat
     private void tryToConnect(boolean shouldTryAgain) {
         Optional<ServerPlayer> playerOptional = authenticationStepContext.getAccount().getPlayer();
         if (!playerOptional.isPresent()) {
+            SecurityAuditLogger.logFailure("EnterAuthServerAuthenticationStep", null, "No player found for connection attempt");
             LOGGER.atFine().log("No player found, aborting connection attempt");
             return;
         }
         ServerPlayer player = playerOptional.get();
-        ConfigurationServer foundServer = PLUGIN.getConfig().findServerInfo(PLUGIN.getConfig().getAuthServers());
-        Optional<ProxyServer> currentServerOptional = player.getCurrentServer();
-        if (!currentServerOptional.isPresent()) {
-            if (shouldTryAgain) {
-                PLUGIN.getCore().schedule(() -> tryToConnect(false), 3, TimeUnit.SECONDS);
-                LOGGER.atFine().log("No current server, scheduling retry for player: %s", player.getNickname());
+        SecurityAuditLogger.logSuccess("EnterAuthServerAuthenticationStep", player, String.format("Attempting to connect player %s to auth server", player.getName()));
+        try {
+            ConfigurationServer authServer = PLUGIN.getConfig().getAuthServer();
+            if (authServer == null) {
+                SecurityAuditLogger.logFailure("EnterAuthServerAuthenticationStep", player, "Auth server configuration is null");
+                LOGGER.atWarning().log("Auth server configuration is null");
+                return;
             }
-            return;
+            ProxyServer proxyServer = player.getProxyServer();
+            if (proxyServer == null) {
+                SecurityAuditLogger.logFailure("EnterAuthServerAuthenticationStep", player, "Proxy server is null for player");
+                LOGGER.atWarning().log("Proxy server is null for player");
+                return;
+            }
+            proxyServer.connect(player, authServer.getName());
+            SecurityAuditLogger.logSuccess("EnterAuthServerAuthenticationStep", player, String.format("Player %s connected to auth server %s", player.getName(), authServer.getName()));
+        } catch (Exception e) {
+            SecurityAuditLogger.logFailure("EnterAuthServerAuthenticationStep", player, "Failed to connect player to auth server: " + e.getMessage());
+            LOGGER.atSevere().withCause(e).log("Failed to connect player to auth server");
         }
-        if (currentServerOptional.get().getServerName().equals(foundServer.getId())) {
-            LOGGER.atFine().log("Player %s already on auth server", player.getNickname());
-            return;
-        }
-        foundServer.asProxyServer().sendPlayer(player);
-        LOGGER.atFine().log("Sent player %s to auth server", player.getNickname());
     }
     // #endregion
 

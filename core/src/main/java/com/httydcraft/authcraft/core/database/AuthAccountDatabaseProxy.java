@@ -8,6 +8,7 @@ import com.httydcraft.authcraft.core.account.AuthAccountAdapter;
 import com.httydcraft.authcraft.api.link.LinkType;
 import com.httydcraft.authcraft.api.link.user.info.LinkUserIdentificator;
 import com.httydcraft.authcraft.api.link.user.info.impl.UserStringIdentificator;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -45,13 +46,20 @@ public class AuthAccountDatabaseProxy implements AccountDatabase {
     @Override
     public CompletableFuture<Account> getAccount(String id) {
         Preconditions.checkNotNull(id, "id must not be null");
+        SecurityAuditLogger.logSuccess("AccountDatabase: getAccount", null, "Account query requested by ID: " + id);
         return CompletableFuture.supplyAsync(() -> {
-            Account account = databaseHelper.getAuthAccountDao()
-                    .queryFirstAccountPlayerId(id)
-                    .map(AuthAccountAdapter::new)
-                    .orElse(null);
-            LOGGER.atFine().log("Queried account by ID: %s, found: %b", id, account != null);
-            return account;
+            try {
+                Account account = databaseHelper.getAuthAccountDao()
+                        .queryFirstAccountPlayerId(id)
+                        .map(AuthAccountAdapter::new)
+                        .orElse(null);
+                SecurityAuditLogger.logSuccess("AccountDatabase: getAccount", null, "Account queried by ID: " + id + ", found: " + (account != null));
+                LOGGER.atFine().log("Queried account by ID: %s, found: %b", id, account != null);
+                return account;
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("AccountDatabase: getAccount", null, "Failed to query account by ID: " + id + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
 
@@ -64,13 +72,20 @@ public class AuthAccountDatabaseProxy implements AccountDatabase {
     @Override
     public CompletableFuture<Account> getAccountFromName(String playerName) {
         Preconditions.checkNotNull(playerName, "playerName must not be null");
+        SecurityAuditLogger.logSuccess("AccountDatabase: getAccountFromName", null, "Account query requested by name: " + playerName);
         return CompletableFuture.supplyAsync(() -> {
-            Account account = databaseHelper.getAuthAccountDao()
-                    .queryFirstAccountPlayerName(playerName)
-                    .map(AuthAccountAdapter::new)
-                    .orElse(null);
-            LOGGER.atFine().log("Queried account by name: %s, found: %b", playerName, account != null);
-            return account;
+            try {
+                Account account = databaseHelper.getAuthAccountDao()
+                        .queryFirstAccountPlayerName(playerName)
+                        .map(AuthAccountAdapter::new)
+                        .orElse(null);
+                SecurityAuditLogger.logSuccess("AccountDatabase: getAccountFromName", null, "Account queried by name: " + playerName + ", found: " + (account != null));
+                LOGGER.atFine().log("Queried account by name: %s, found: %b", playerName, account != null);
+                return account;
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("AccountDatabase: getAccountFromName", null, "Failed to query account by name: " + playerName + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
 
@@ -131,14 +146,21 @@ public class AuthAccountDatabaseProxy implements AccountDatabase {
      */
     @Override
     public CompletableFuture<Collection<Account>> getAllLinkedAccounts() {
+        SecurityAuditLogger.logSuccess("AccountDatabase: getAllLinkedAccounts", null, "All linked accounts query requested");
         return CompletableFuture.supplyAsync(() -> {
-            Collection<Account> accounts = databaseHelper.getAuthAccountDao()
-                    .queryAllLinkedAccounts()
-                    .stream()
-                    .map(AuthAccountAdapter::new)
-                    .collect(Collectors.toList());
-            LOGGER.atFine().log("Queried all linked accounts, found: %d", accounts.size());
-            return accounts;
+            try {
+                Collection<Account> accounts = databaseHelper.getAuthAccountDao()
+                        .queryAllLinkedAccounts()
+                        .stream()
+                        .map(AuthAccountAdapter::new)
+                        .collect(Collectors.toList());
+                SecurityAuditLogger.logSuccess("AccountDatabase: getAllLinkedAccounts", null, "All linked accounts queried, count: " + accounts.size());
+                LOGGER.atFine().log("Queried all linked accounts, count: %d", accounts.size());
+                return accounts;
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("AccountDatabase: getAllLinkedAccounts", null, "Failed to query all linked accounts, error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
 
@@ -151,14 +173,21 @@ public class AuthAccountDatabaseProxy implements AccountDatabase {
     @Override
     public CompletableFuture<Collection<Account>> getAllLinkedAccounts(LinkType linkType) {
         Preconditions.checkNotNull(linkType, "linkType must not be null");
+        SecurityAuditLogger.logSuccess("AccountDatabase: getAllLinkedAccountsByType", null, "Linked accounts query requested for type: " + linkType.getName());
         return CompletableFuture.supplyAsync(() -> {
-            Collection<Account> accounts = databaseHelper.getAuthAccountDao()
-                    .queryAllLinkedAccounts(linkType)
-                    .stream()
-                    .map(AuthAccountAdapter::new)
-                    .collect(Collectors.toList());
-            LOGGER.atFine().log("Queried linked accounts for type: %s, found: %d", linkType.getName(), accounts.size());
-            return accounts;
+            try {
+                Collection<Account> accounts = databaseHelper.getAuthAccountDao()
+                        .queryAllLinkedAccounts(linkType)
+                        .stream()
+                        .map(AuthAccountAdapter::new)
+                        .collect(Collectors.toList());
+                SecurityAuditLogger.logSuccess("AccountDatabase: getAllLinkedAccountsByType", null, "Linked accounts queried for type: " + linkType.getName() + ", count: " + accounts.size());
+                LOGGER.atFine().log("Queried linked accounts for type: %s, found: %d", linkType.getName(), accounts.size());
+                return accounts;
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("AccountDatabase: getAllLinkedAccountsByType", null, "Failed to query linked accounts for type: " + linkType.getName() + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
     // #endregion
@@ -175,6 +204,7 @@ public class AuthAccountDatabaseProxy implements AccountDatabase {
         Preconditions.checkNotNull(account, "account must not be null");
         return CompletableFuture.supplyAsync(() -> {
             Account savedAccount = new AuthAccountAdapter(databaseHelper.getAuthAccountDao().createOrUpdateAccount(account));
+            SecurityAuditLogger.logSuccess("AccountDatabase: saveOrUpdateAccount", null, "Account saved or updated: " + account.getPlayerId());
             LOGGER.atFine().log("Saved or updated account: %s", account.getPlayerId());
             return savedAccount;
         });
@@ -189,10 +219,17 @@ public class AuthAccountDatabaseProxy implements AccountDatabase {
     @Override
     public CompletableFuture<Void> updateAccountLinks(Account account) {
         Preconditions.checkNotNull(account, "account must not be null");
+        SecurityAuditLogger.logSuccess("AccountDatabase: updateAccountLinks", null, "Update account links requested for: " + account.getPlayerId());
         return CompletableFuture.supplyAsync(() -> {
-            databaseHelper.getAccountLinkDao().updateAccountLinks(account);
-            LOGGER.atFine().log("Updated links for account: %s", account.getPlayerId());
-            return null;
+            try {
+                databaseHelper.getAccountLinkDao().updateAccountLinks(account);
+                SecurityAuditLogger.logSuccess("AccountDatabase: updateAccountLinks", null, "Updated account links for: " + account.getPlayerId());
+                LOGGER.atFine().log("Updated links for account: %s", account.getPlayerId());
+                return null;
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("AccountDatabase: updateAccountLinks", null, "Failed to update account links for: " + account.getPlayerId() + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
 

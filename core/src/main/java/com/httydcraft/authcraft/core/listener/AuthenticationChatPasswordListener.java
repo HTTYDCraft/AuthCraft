@@ -50,26 +50,36 @@ public class AuthenticationChatPasswordListener {
         Preconditions.checkNotNull(messageParts, "messageParts must not be null");
         if (messageParts.length == 0) {
             LOGGER.atWarning().log("Empty password input from player: %s", event.getPlayer().getNickname());
+            SecurityAuditLogger.logFailure("AuthenticationChatPasswordListener", event.getPlayer(), "Empty password input");
             return;
         }
 
         String password = messageParts[0];
         ServerPlayer player = event.getPlayer();
         Account account = plugin.getAuthenticatingAccountBucket().getAuthenticatingAccountNullable(player);
+        if (account == null) {
+            LOGGER.atWarning().log("Auth fail: player %s [%s], reason: account not found in chat registration/login", player.getNickname(), player.getPlayerIp());
+            SecurityAuditLogger.logFailure("AuthenticationChatPasswordListener", player, "Account not found in chat registration/login");
+            player.sendMessage(config.getServerMessages().getMessage("account-not-found"));
+            return;
+        }
         Preconditions.checkNotNull(account, "account must not be null for player: %s", player.getNickname());
 
         if (!account.isRegistered()) {
             if (passwordConfirmationFailed(messageParts, password, player)) {
                 LOGGER.atFine().log("Password confirmation failed for player: %s", player.getNickname());
+                SecurityAuditLogger.logFailure("AuthenticationChatPasswordListener", player, "Password confirmation failed");
                 return;
             }
             RegisterCommandImplementation impl = new RegisterCommandImplementation(plugin);
             impl.performRegister(player, account, new RegisterPassword(password));
             LOGGER.atInfo().log("Performed registration for player: %s", player.getNickname());
+            SecurityAuditLogger.logSuccess("AuthenticationChatPasswordListener", player, "Performed registration via chat");
         } else {
             LoginCommandImplementation impl = new LoginCommandImplementation(plugin);
             impl.performLogin(player, account, password);
             LOGGER.atInfo().log("Performed login attempt for player: %s", player.getNickname());
+            SecurityAuditLogger.logSuccess("AuthenticationChatPasswordListener", player, "Performed login via chat");
         }
     }
     // #endregion

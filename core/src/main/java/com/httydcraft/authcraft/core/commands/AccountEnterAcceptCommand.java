@@ -14,6 +14,7 @@ import revxrsal.commands.annotation.Default;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
 import revxrsal.commands.orphan.OrphanCommand;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -84,7 +85,13 @@ public class AccountEnterAcceptCommand implements OrphanCommand {
                     account.nextAuthenticationStep(plugin.getAuthenticationContextFactoryBucket().createContext(account));
                     plugin.getLinkEntryBucket().modifiable().remove(entryUser);
                     actorWrapper.reply(linkType.getLinkMessages().getMessage("enter-accepted", linkType.newMessageContext(account)));
-                    LOGGER.atInfo().log("Accepted entry for account: %s", account.getName());
+                    try {
+                        LOGGER.atInfo().log("Accepted entry for account: %s", account.getName());
+                        SecurityAuditLogger.logSuccess("AccountEnterAcceptCommand", account.getPlayer().orElse(null), "Accepted entry for account: " + account.getName());
+                    } catch (Exception ex) {
+                        SecurityAuditLogger.logFailure("AccountEnterAcceptCommand", null, "Failed to accept entry for account: " + (account != null ? account.getName() : "null") + ", error: " + ex.getMessage());
+                        throw ex;
+                    }
                 }));
     }
     // #endregion

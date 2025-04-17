@@ -3,6 +3,8 @@ package com.httydcraft.authcraft.velocity;
 import com.google.common.base.Preconditions;
 import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.api.AuthPlugin;
+import com.httydcraft.authcraft.api.server.CoreServer;
+import com.httydcraft.authcraft.core.hooks.VkPluginHook;
 import com.httydcraft.authcraft.velocity.adventure.VelocityAudienceProvider;
 import com.httydcraft.authcraft.velocity.commands.VelocityCommandRegistry;
 import com.httydcraft.authcraft.velocity.hooks.VelocityVkPluginHook;
@@ -17,14 +19,15 @@ import com.alessiodp.libby.VelocityLibraryManager;
 import com.httydcraft.multimessenger.vk.message.VkMessage;
 import com.httydcraft.multimessenger.vk.provider.VkApiProvider;
 import com.google.inject.Inject;
-import com.ubivashka.vk.velocity.VelocityVkApiPlugin;
+import com.httydcraft.vk.api.velocity.VelocityVkApiPlugin;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
-import com.velocitywired.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.platform.AudienceProvider;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -34,13 +37,13 @@ import java.util.Collections;
 // #region Class Documentation
 /**
  * Bootstrap class for the AuthCraft plugin on Velocity.
- * Initializes the plugin, registers listeners, commands, and hooks.
+ * Initializes the AuthCraft plugin, registers listeners, commands, and hooks.
  */
 public class VelocityAuthPluginBootstrap {
     private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
     private static VelocityAuthPluginBootstrap instance;
     private final AudienceProvider audienceProvider;
-    private final ServerCore core;
+    private final CoreServer core;
     private final File dataFolder;
     private final ProxyServer proxyServer;
     private final Logger logger;
@@ -62,7 +65,7 @@ public class VelocityAuthPluginBootstrap {
         this.proxyServer = Preconditions.checkNotNull(proxyServer, "proxyServer must not be null");
         this.logger = Preconditions.checkNotNull(logger, "logger must not be null");
         this.dataFolder = Preconditions.checkNotNull(dataDirectory, "dataDirectory must not be null").toFile();
-        this.core = new VelocityProxyCoreServer(proxyServer);
+        this.core = new VelocityProxyCoreServer((ProxyServer) proxyServer);
         this.audienceProvider = new VelocityAudienceProvider(proxyServer);
         LOGGER.atInfo().log("Initialized VelocityAuthPluginBootstrap");
     }

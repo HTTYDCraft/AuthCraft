@@ -313,7 +313,7 @@ public class VelocityExceptionHandler extends VelocityExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled NumberNotInRangeException for input: %s", exception.getInput());
-        sendComponent(actor, messages.getMessage("number-not-in-range", MessageContext.of("%input%", exception.getInput())));
+        sendComponent(actor, messages.getMessage("number-not-in-range"));
     }
 
     /**

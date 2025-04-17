@@ -74,7 +74,7 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>io.github.httydcraft</groupId>
+            <groupId>io.github.bivashy</groupId>
             <artifactId>velocity-proxy</artifactId>
             <scope>provided</scope>
         </dependency>
@@ -120,6 +120,17 @@
         <dependency>
             <groupId>com.google.flogger</groupId>
             <artifactId>google-extensions</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-platform-api</artifactId>
+        </dependency>
+
+        <!-- LuckPerms API -->
+        <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>

@@ -34,6 +34,7 @@ public class VKCommandRegistry extends MessengerCommandRegistry {
     public VKCommandRegistry() {
         super(COMMAND_HANDLER, VKLinkType.getInstance());
         LOGGER.atInfo().log("Initializing VKCommandRegistry");
+        SecurityAuditLogger.logSuccess("VKCommandRegistry", null, "VKCommandRegistry initialized");
 
         COMMAND_HANDLER.registerContextResolver(LinkCommandActorWrapper.class, context -> {
             Preconditions.checkNotNull(context, "context must not be null");
@@ -66,7 +67,9 @@ public class VKCommandRegistry extends MessengerCommandRegistry {
                     .apiVersion("5.131")
                     .execute();
             LOGGER.atInfo().log("VK API settings configured successfully");
+            SecurityAuditLogger.logSuccess("VKCommandRegistry", null, "VK API settings configured successfully");
         } catch (ApiException | ClientException e) {
+            SecurityAuditLogger.logFailure("VKCommandRegistry", null, "Failed to configure VK API settings: " + e.getMessage());
             LOGGER.atSevere().withCause(e).log("Failed to configure VK API settings");
             System.err.println("Give all permissions to the VK API token for automatic settings apply.");
         }

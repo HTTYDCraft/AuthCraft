@@ -12,6 +12,7 @@ import com.httydcraft.authcraft.core.server.commands.annotations.AuthenticationA
 import com.httydcraft.authcraft.core.server.commands.parameters.RegisterPassword;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.api.step.AuthenticationStep;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -49,8 +50,16 @@ public class RegisterCommandImplementation {
      */
     public void performRegister(ServerPlayer player, @AuthenticationAccount Account account, RegisterPassword password) {
         Preconditions.checkNotNull(player, "player must not be null");
-        Preconditions.checkNotNull(account, "account must not be null");
         Preconditions.checkNotNull(password, "password must not be null");
+
+        if (account == null) {
+            SecurityAuditLogger.logFailure("Register", player, "Account is null in implementation");
+            LOGGER.atWarning().log("Auth fail: player %s [%s], reason: account not found for registration (impl)", player.getNickname(), player.getPlayerIp());
+            player.sendMessage(config.getServerMessages().getMessage("account-not-found"));
+            return;
+        }
+
+        Preconditions.checkNotNull(account, "account must not be null");
 
         AuthenticationStep currentAuthenticationStep = account.getCurrentAuthenticationStep();
         LOGGER.atFine().log("Processing registration for account: %s", account.getPlayerId());
@@ -63,17 +72,24 @@ public class RegisterCommandImplementation {
 
             currentAuthenticationStep.getAuthenticationStepContext().setCanPassToNextStep(true);
 
-            if (!account.getCryptoProvider().getIdentifier().equals(config.getActiveHashType().getIdentifier())) {
-                account.setCryptoProvider(config.getActiveHashType());
-                LOGGER.atInfo().log("Updated hash type for account: %s", account.getPlayerId());
+            if (!account.isRegistered()) {
+                account.setRegistered(true);
+                account.setRegisterTime(System.currentTimeMillis());
+                account.setRegisterIp(player.getPlayerIp());
+                if (!account.getCryptoProvider().getIdentifier().equals(config.getActiveHashType().getIdentifier())) {
+                    account.setCryptoProvider(config.getActiveHashType());
+                    // Можно добавить отдельный лог для смены hash type, если требуется
+                }
+                account.setPasswordHash(account.getCryptoProvider().hash(HashInput.of(password.getPassword())));
+                accountStorage.saveOrUpdateAccount(account);
+                account.nextAuthenticationStep(plugin.getAuthenticationContextFactoryBucket().createContext(account));
+                player.sendMessage(config.getServerMessages().getMessage("register-success"));
+                SecurityAuditLogger.logSuccess("Registration successful", player, "Account registered: " + account.getPlayerId());
+            } else {
+                SecurityAuditLogger.logFailure("Register", player, "Account already registered: " + account.getPlayerId());
+                player.sendMessage(config.getServerMessages().getMessage("already-registered"));
             }
-
-            account.setPasswordHash(account.getCryptoProvider().hash(HashInput.of(password.getPassword())));
-            accountStorage.saveOrUpdateAccount(account);
-
-            account.nextAuthenticationStep(plugin.getAuthenticationContextFactoryBucket().createContext(account));
-            player.sendMessage(config.getServerMessages().getMessage("register-success"));
-            LOGGER.atInfo().log("Registration successful for account: %s", account.getPlayerId());
+            LOGGER.atInfo().log("Registration %s for account: %s", account.isRegistered() ? "successful" : "failed", account.getPlayerId());
         });
     }
     // #endregion

@@ -28,18 +28,35 @@ public abstract class TelegramUpdatesListener implements UpdatesListener {
      */
     @Override
     public int process(List<Update> updates) {
-        Preconditions.checkNotNull(updates, "updates must not be null");
-        Preconditions.checkArgument(!updates.isEmpty(), "updates must not be empty");
+        try {
+            Preconditions.checkNotNull(updates, "updates must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("TelegramUpdatesListener", null, "Updates list is null");
+            throw ex;
+        }
+        try {
+            Preconditions.checkArgument(!updates.isEmpty(), "updates must not be empty");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("TelegramUpdatesListener", null, "Updates list is empty");
+            throw ex;
+        }
 
         updates.stream()
                 .findFirst()
                 .ifPresent(update -> {
-                    Preconditions.checkNotNull(update, "update must not be null");
+                    try {
+                        Preconditions.checkNotNull(update, "update must not be null");
+                    } catch (Exception ex) {
+                        SecurityAuditLogger.logFailure("TelegramUpdatesListener", null, "Update is null");
+                        throw ex;
+                    }
                     if (lastUpdateId == update.updateId()) {
+                        SecurityAuditLogger.logFailure("TelegramUpdatesListener", null, "Duplicate update with ID: " + lastUpdateId);
                         LOGGER.atFine().log("Skipping duplicate update with ID: %d", lastUpdateId);
                         return;
                     }
                     lastUpdateId = update.updateId();
+                    SecurityAuditLogger.logSuccess("TelegramUpdatesListener", null, "Processing update with ID: " + lastUpdateId);
                     LOGGER.atInfo().log("Processing update with ID: %d", lastUpdateId);
                     processValidUpdates(ImmutableList.copyOf(updates));
                 });

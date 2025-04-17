@@ -60,7 +60,7 @@ public class LinkCodeCommand implements OrphanCommand {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(linkContext, "linkContext must not be null");
 
-        LOGGER.atInfo().log("Processing link confirmation for code: %s", linkContext.getCode());
+        LOGGER.atInfo().log("Processing link confirmation for code: %s");
         LinkConfirmationType linkConfirmationType = getLinkConfirmationType(actor);
         Messages<?> messages = linkConfirmationType.getConfirmationMessages(linkContext.getConfirmationUser());
         LinkType linkType = linkContext.getConfirmationUser().getLinkType();

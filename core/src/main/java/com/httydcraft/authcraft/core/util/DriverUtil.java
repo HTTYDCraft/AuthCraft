@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.logging.Logger;
 
@@ -65,28 +66,27 @@ public final class DriverUtil {
         Preconditions.checkNotNull(classLoader, "classLoader must not be null");
         LOGGER.atFine().log("Loading driver from URL: %s", driverUrl);
 
-        try (URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{driverUrl}, classLoader)) {
+        try {
+            URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{driverUrl}, classLoader);
             ServiceLoader<Driver> drivers = ServiceLoader.load(Driver.class, urlClassLoader);
             Iterator<Driver> iterator = drivers.iterator();
-            boolean loaded = false;
-            while (iterator.hasNext()) {
+            while(true) {
                 try {
+                    if (!iterator.hasNext())
+                        break;
                     Driver driver = iterator.next();
-                    Driver newDriver = (Driver) Class.forName(driver.getClass().getName(), true, urlClassLoader)
-                            .getDeclaredConstructor()
+                    Driver newDriver = (Driver) Class.forName(driver.getClass().getName(), true, urlClassLoader).getDeclaredConstructor()
                             .newInstance();
                     DriverManager.registerDriver(new DelegatingDriver(newDriver));
-                    loaded = true;
                     LOGGER.atFine().log("Registered driver: %s", driver.getClass().getName());
-                } catch (Exception e) {
-                    LOGGER.atFine().log("Skipping invalid driver: %s", e.getMessage());
+                } catch(ServiceConfigurationError ignored) {
+                    LOGGER.atFine().log("Skipping invalid driver: %s");
                 }
             }
-            LOGGER.atInfo().log("Driver loading %s: %b", driverUrl, loaded);
-            return loaded;
-        } catch (SQLException | ClassNotFoundException | InstantiationException | IllegalAccessException
-                 | NoSuchMethodException | InvocationTargetException e) {
-            LOGGER.atWarning().withCause(e).log("Failed to load driver from URL: %s", driverUrl);
+            LOGGER.atInfo().log("Driver loading %s: %b", driverUrl);
+            return true;
+        } catch(SQLException | ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException exception) {
+            exception.printStackTrace();
             return false;
         }
     }

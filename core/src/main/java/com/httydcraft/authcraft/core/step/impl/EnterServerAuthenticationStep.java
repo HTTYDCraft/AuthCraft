@@ -8,12 +8,13 @@ import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.api.step.AuthenticationStepContext;
 import com.httydcraft.authcraft.core.step.AuthenticationStepTemplate;
 import com.httydcraft.authcraft.core.step.creators.AuthenticationStepFactoryTemplate;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 import java.util.Optional;
 
 // #region Class Documentation
 /**
- * Authentication step for directing a player to the game server.
+ * Authentication step for directing a player to the game server in AuthCraft.
  * Finalizes authentication and updates account session details.
  */
 public class EnterServerAuthenticationStep extends AuthenticationStepTemplate {
@@ -32,6 +33,7 @@ public class EnterServerAuthenticationStep extends AuthenticationStepTemplate {
         super(STEP_NAME, context);
         Preconditions.checkNotNull(context, "context must not be null");
         LOGGER.atFine().log("Initialized EnterServerAuthenticationStep for account: %s", context.getAccount().getPlayerId());
+        LOGGER.atFine().log("EnterServerAuthenticationStep initialized");
     }
     // #endregion
 
@@ -66,22 +68,35 @@ public class EnterServerAuthenticationStep extends AuthenticationStepTemplate {
      */
     public void enterServer() {
         Account account = authenticationStepContext.getAccount();
+        ServerPlayer player = account != null ? account.getPlayer().orElse(null) : null;
+        SecurityAuditLogger.logSuccess("EnterServerAuthenticationStep", player, String.format("Step started for account: %s, player: %s", account != null ? account.getPlayerId() : "null", player != null ? player.getName() : "null"));
+        if (account == null) {
+            SecurityAuditLogger.logFailure("EnterServerAuthenticationStep", null, "Account is null");
+            LOGGER.atWarning().log("Auth fail: enterServer step, reason: account is null in EnterServerAuthenticationStep");
+            return;
+        }
         LOGGER.atFine().log("Processing enterServer for account: %s", account.getPlayerId());
 
         PLUGIN.getAuthenticatingAccountBucket().removeAuthenticatingAccount(account);
-        Optional<ServerPlayer> playerOptional = account.getPlayer();
         account.setLastSessionStartTimestamp(System.currentTimeMillis());
-        playerOptional.map(ServerPlayer::getPlayerIp).ifPresent(account::setLastIpAddress);
+        account.getPlayer().map(ServerPlayer::getPlayerIp).ifPresent(account::setLastIpAddress);
         PLUGIN.getAccountDatabase().saveOrUpdateAccount(account);
 
-        if (!playerOptional.isPresent()) {
+        if (!account.getPlayer().isPresent()) {
+            SecurityAuditLogger.logFailure("EnterServerAuthenticationStep", null, String.format("No player found for account: %s", account.getPlayerId()));
             LOGGER.atFine().log("No player found for account: %s", account.getPlayerId());
             return;
         }
 
-        ServerPlayer player = playerOptional.get();
-        PLUGIN.getConfig().findServerInfo(PLUGIN.getConfig().getGameServers()).asProxyServer().sendPlayer(player);
-        LOGGER.atInfo().log("Sent player %s to game server", player.getNickname());
+        ServerPlayer presentPlayer = account.getPlayer().get();
+        try {
+            PLUGIN.getConfig().findServerInfo(PLUGIN.getConfig().getGameServers()).asProxyServer().sendPlayer(presentPlayer);
+            LOGGER.atInfo().log("Sent player %s to game server", presentPlayer.getNickname());
+            SecurityAuditLogger.logSuccess("EnterServerAuthenticationStep", presentPlayer, "Player sent to game server: " + presentPlayer.getName());
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("EnterServerAuthenticationStep", presentPlayer, "Failed to send player: " + (presentPlayer != null ? presentPlayer.getName() : "null") + ", error: " + ex.getMessage());
+            throw ex;
+        }
     }
     // #endregion
 
@@ -106,6 +121,12 @@ public class EnterServerAuthenticationStep extends AuthenticationStepTemplate {
          */
         @Override
         public EnterServerAuthenticationStep createNewAuthenticationStep(AuthenticationStepContext context) {
+            if (context == null) {
+                SecurityAuditLogger.logFailure("EnterServerAuthenticationStepFactory", null, "Context is null on step factory event");
+                LOGGER.atWarning().log("Auth fail: enterServer step factory, reason: context is null");
+                return null;
+            }
+            SecurityAuditLogger.logSuccess("EnterServerAuthenticationStepFactory", null, String.format("Step factory event triggered for player: %s", context.getAccount() != null && context.getAccount().getPlayer().isPresent() ? context.getAccount().getPlayer().get().getName() : "null"));
             LOGGER.atFine().log("Creating new EnterServerAuthenticationStep");
             return new EnterServerAuthenticationStep(context);
         }

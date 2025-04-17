@@ -17,8 +17,8 @@ import com.httydcraft.authcraft.core.server.commands.annotations.TelegramUse;
 import com.httydcraft.authcraft.api.type.LinkConfirmationType;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
-import revxrsal.commands.annotation.Optional;
 import revxrsal.commands.orphan.OrphanCommand;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -78,9 +78,15 @@ public class TelegramLinkCommand extends MessengerLinkCommandTemplate implements
 
             LinkConfirmationType linkConfirmationType = getLinkConfirmationType(commandActor);
             long timeoutTimestamp = System.currentTimeMillis() + TelegramLinkType.getInstance().getSettings().getConfirmationSettings().getRemoveDelay().getMillis();
-            sendLinkConfirmation(commandActor, linkConfirmationType.bindLinkConfirmationUser(
-                    new BaseLinkConfirmationUser(linkConfirmationType, timeoutTimestamp, TelegramLinkType.getInstance(), account, code), linkUserIdentificator));
-            LOGGER.atInfo().log("Sent link confirmation for accountId: %s", accountId);
+            try {
+                sendLinkConfirmation(commandActor, linkConfirmationType.bindLinkConfirmationUser(
+                        new BaseLinkConfirmationUser(linkConfirmationType, timeoutTimestamp, TelegramLinkType.getInstance(), account, code), linkUserIdentificator));
+                LOGGER.atInfo().log("Sent link confirmation for accountId: %s", accountId);
+                SecurityAuditLogger.logSuccess("TelegramLinkCommand", null, "Sent link confirmation for accountId: " + accountId);
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("TelegramLinkCommand", null, "Failed to send link confirmation for accountId: " + accountId + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
     // #endregion

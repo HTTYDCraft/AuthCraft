@@ -54,9 +54,20 @@ public abstract class DispatchCommandListener {
      * @param peerId    The peer ID associated with the message. Must be positive.
      */
     protected void onMessage(com.vk.api.sdk.objects.messages.Message vkMessage, int peerId) {
-        Preconditions.checkNotNull(vkMessage, "vkMessage must not be null");
-        Preconditions.checkArgument(peerId > 0, "peerId must be positive");
+        try {
+            Preconditions.checkNotNull(vkMessage, "vkMessage must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("DispatchCommandListener", null, "vkMessage is null");
+            throw ex;
+        }
+        try {
+            Preconditions.checkArgument(peerId > 0, "peerId must be positive");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("DispatchCommandListener", null, "peerId is not positive: " + peerId);
+            throw ex;
+        }
 
+        SecurityAuditLogger.logSuccess("DispatchCommandListener", null, "Processing VK message for peerId: " + peerId);
         LOGGER.atInfo().log("Processing VK message for peerId: %d", peerId);
         EXECUTOR_SERVICE.execute(() -> VkHandler.getInstances().forEach(commandHandler -> {
             handleCommandDispatch(commandHandler, new MessageDispatchSource(vkMessage));
@@ -66,7 +77,13 @@ public abstract class DispatchCommandListener {
                     .forEach(customCommand -> {
                         Message message = createMessage(customCommand);
                         LOGGER.atFine().log("Sending custom command response to peerId: %d", peerId);
-                        message.send(Identificator.of(peerId));
+                        try {
+                            message.send(Identificator.of(peerId));
+                            SecurityAuditLogger.logSuccess("DispatchCommandListener", null, "Sent custom command response to peerId: " + peerId);
+                        } catch (Exception ex) {
+                            SecurityAuditLogger.logFailure("DispatchCommandListener", null, "Failed to send custom command response to peerId: " + peerId + ", error: " + ex.getMessage());
+                            throw ex;
+                        }
                     });
         }));
     }
@@ -79,11 +96,23 @@ public abstract class DispatchCommandListener {
      * @param buttonEvent The button click event to process. Must not be null.
      */
     protected void onButtonClick(CallbackButtonEvent buttonEvent) {
-        Preconditions.checkNotNull(buttonEvent, "buttonEvent must not be null");
+        try {
+            Preconditions.checkNotNull(buttonEvent, "buttonEvent must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("DispatchCommandListener", null, "buttonEvent is null");
+            throw ex;
+        }
 
+        SecurityAuditLogger.logSuccess("DispatchCommandListener", null, "Processing button click for peerId: " + buttonEvent.getPeerID());
         LOGGER.atInfo().log("Processing button click for peerId: %d", buttonEvent.getPeerID());
         EXECUTOR_SERVICE.execute(() -> VkHandler.getInstances().forEach(commandHandler -> {
-            responseToButtonClick(buttonEvent);
+            try {
+                responseToButtonClick(buttonEvent);
+                SecurityAuditLogger.logSuccess("DispatchCommandListener", null, "Sent button click response for eventId: " + buttonEvent.getEventID());
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("DispatchCommandListener", null, "Failed to send button click response for eventId: " + buttonEvent.getEventID() + ", error: " + ex.getMessage());
+                throw ex;
+            }
 
             CallbackButton callbackButton = GSON.fromJson(GSON.toJson(buttonEvent), CallbackButton.class);
             handleCommandDispatch(commandHandler, new ButtonDispatchSource(callbackButton));
@@ -96,7 +125,13 @@ public abstract class DispatchCommandListener {
                     .forEach(customCommand -> {
                         Message message = createMessage(customCommand);
                         LOGGER.atFine().log("Sending custom command response to peerId: %d", buttonEvent.getPeerID());
-                        message.send(Identificator.of(buttonEvent.getPeerID()));
+                        try {
+                            message.send(Identificator.of(buttonEvent.getPeerID()));
+                            SecurityAuditLogger.logSuccess("DispatchCommandListener", null, "Sent custom command response to peerId: " + buttonEvent.getPeerID());
+                        } catch (Exception ex) {
+                            SecurityAuditLogger.logFailure("DispatchCommandListener", null, "Failed to send custom command response to peerId: " + buttonEvent.getPeerID() + ", error: " + ex.getMessage());
+                            throw ex;
+                        }
                     });
         }));
     }
@@ -110,7 +145,12 @@ public abstract class DispatchCommandListener {
      * @throws RuntimeException if the response fails due to API or client issues.
      */
     private void responseToButtonClick(CallbackButtonEvent event) {
-        Preconditions.checkNotNull(event, "event must not be null");
+        try {
+            Preconditions.checkNotNull(event, "event must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("DispatchCommandListener", null, "button click event is null");
+            throw ex;
+        }
 
         try {
             LOGGER.atFine().log("Sending button click response for eventId: %s", event.getEventID());
@@ -119,6 +159,7 @@ public abstract class DispatchCommandListener {
                     .sendMessageEventAnswer(VK_HOOK.getActor(), event.getEventID(), event.getUserID(), event.getPeerID())
                     .execute();
         } catch (ApiException | ClientException e) {
+            SecurityAuditLogger.logFailure("DispatchCommandListener", null, "Failed VK API call for button click eventId: " + event.getEventID() + ", error: " + e.getMessage());
             LOGGER.atSevere().withCause(e).log("Failed to send button click response for eventId: %s", event.getEventID());
             throw new RuntimeException(e);
         }

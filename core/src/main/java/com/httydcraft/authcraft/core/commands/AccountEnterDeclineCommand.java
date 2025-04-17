@@ -13,6 +13,7 @@ import revxrsal.commands.annotation.Default;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
 import revxrsal.commands.orphan.OrphanCommand;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -39,7 +40,7 @@ public class AccountEnterDeclineCommand implements OrphanCommand {
      * Executes the decline command, rejecting specified or all entry requests for the user.
      *
      * @param actorWrapper       The actor executing the command. Must not be null.
-     *کشف @param linkType          The link type associated with the command. Must not be null.
+     * @param linkType          The link type associated with the command. Must not be null.
      * @param declinePlayerName  The player name to decline, or "all" for all requests (default: "all").
      */
     @DefaultFor("~")
@@ -76,10 +77,16 @@ public class AccountEnterDeclineCommand implements OrphanCommand {
                         LOGGER.atFine().log("Decline cancelled for account: %s", entryUser.getAccount().getName());
                         return;
                     }
-                    plugin.getLinkEntryBucket().modifiable().remove(entryUser);
-                    entryUser.getAccount().kick(linkType.getServerMessages().getStringMessage("enter-declined", linkType.newMessageContext(entryUser.getAccount())));
-                    actorWrapper.reply(linkType.getLinkMessages().getMessage("enter-declined", linkType.newMessageContext(entryUser.getAccount())));
-                    LOGGER.atInfo().log("Declined entry for account: %s", entryUser.getAccount().getName());
+                    try {
+                        plugin.getLinkEntryBucket().modifiable().remove(entryUser);
+                        entryUser.getAccount().kick(linkType.getServerMessages().getStringMessage("enter-declined", linkType.newMessageContext(entryUser.getAccount())));
+                        actorWrapper.reply(linkType.getLinkMessages().getMessage("enter-declined", linkType.newMessageContext(entryUser.getAccount())));
+                        LOGGER.atInfo().log("Declined entry for account: %s", entryUser.getAccount().getName());
+                        SecurityAuditLogger.logSuccess("AccountEnterDeclineCommand", entryUser.getAccount().getPlayer().orElse(null), "Declined entry for account: " + entryUser.getAccount().getName());
+                    } catch (Exception ex) {
+                        SecurityAuditLogger.logFailure("AccountEnterDeclineCommand", null, "Failed to decline entry for account: " + (entryUser.getAccount() != null ? entryUser.getAccount().getName() : "null") + ", error: " + ex.getMessage());
+                        throw ex;
+                    }
                 }));
     }
     // #endregion

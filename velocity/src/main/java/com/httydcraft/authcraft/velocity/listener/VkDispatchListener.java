@@ -2,8 +2,9 @@ package com.httydcraft.authcraft.velocity.listener;
 
 import com.google.common.base.Preconditions;
 import com.google.common.flogger.GoogleLogger;
-import com.ubivashka.vk.velocity.events.VKCallbackButtonPressEvent;
-import com.ubivashka.vk.velocity.events.VKMessageEvent;
+import com.httydcraft.authcraft.core.command.DispatchCommandListener;
+import com.httydcraft.vk.api.velocity.events.VKCallbackButtonPressEvent;
+import com.httydcraft.vk.api.velocity.events.VKMessageEvent;
 import com.velocitypowered.api.event.Subscribe;
 
 // #region Class Documentation

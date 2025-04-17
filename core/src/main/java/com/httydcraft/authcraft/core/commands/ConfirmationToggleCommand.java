@@ -12,6 +12,7 @@ import com.httydcraft.authcraft.core.link.LinkCommandActorWrapper;
 import com.httydcraft.authcraft.api.link.LinkType;
 import com.httydcraft.authcraft.api.link.user.LinkUser;
 import com.httydcraft.authcraft.api.link.user.info.LinkUserInfo;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import io.github.revxrsal.eventbus.EventBus;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
@@ -63,10 +64,16 @@ public class ConfirmationToggleCommand implements OrphanCommand {
                 LOGGER.atFine().log("Confirmation toggle cancelled for account: %s", account.getName());
                 return;
             }
-            LinkUserInfo linkUserInfo = linkUser.getLinkUserInfo();
-            linkUserInfo.setConfirmationEnabled(!linkUserInfo.isConfirmationEnabled());
-            accountDatabase.saveOrUpdateAccount(account);
-            LOGGER.atInfo().log("Toggled confirmation for account: %s, enabled: %b", account.getName(), linkUserInfo.isConfirmationEnabled());
+            try {
+                LinkUserInfo linkUserInfo = linkUser.getLinkUserInfo();
+                linkUserInfo.setConfirmationEnabled(!linkUserInfo.isConfirmationEnabled());
+                accountDatabase.saveOrUpdateAccount(account);
+                LOGGER.atInfo().log("Toggled confirmation for account: %s, enabled: %b", account.getName(), linkUserInfo.isConfirmationEnabled());
+                SecurityAuditLogger.logSuccess("ConfirmationToggleCommand", account.getPlayer().orElse(null), "Confirmation toggled for account: " + account.getName() + ", enabled: " + linkUserInfo.isConfirmationEnabled());
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("ConfirmationToggleCommand", null, "Failed to toggle confirmation for account: " + (account != null ? account.getName() : "null") + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
     // #endregion

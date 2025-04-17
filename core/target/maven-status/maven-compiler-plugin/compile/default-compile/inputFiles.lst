@@ -120,6 +120,7 @@ C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcra
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\hooks\BaseDiscordHook.java
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\hooks\BaseTelegramPluginHook.java
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\hooks\DiscordHook.java
+C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\hooks\LuckPermsHook.java
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\hooks\nanolimbo\InfoForwardingFactory.java
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\hooks\nanolimbo\NanoLimboConfig.java
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\hooks\nanolimbo\NanoLimboProvider.java
@@ -193,4 +194,5 @@ C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcra
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\util\GoogleAuthenticatorQRGenerator.java
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\util\HashUtils.java
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\util\RandomCodeFactory.java
+C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\util\SecurityAuditLogger.java
 C:\Users\BezzMC\IdeaProjects\AuthCraft\core\src\main\java\com\httydcraft\authcraft\core\util\TimeUtils.java

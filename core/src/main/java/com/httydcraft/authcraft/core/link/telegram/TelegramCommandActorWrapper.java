@@ -11,6 +11,8 @@ import com.httydcraft.authcraft.core.link.LinkCommandActorWrapperTemplate;
 import com.httydcraft.authcraft.api.link.user.info.LinkUserIdentificator;
 import com.httydcraft.authcraft.api.link.user.info.impl.UserNumberIdentificator;
 
+import java.util.Optional;
+
 // #region Class Documentation
 /**
  * Wrapper for Telegram command actors.

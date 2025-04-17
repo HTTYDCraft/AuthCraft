@@ -10,6 +10,7 @@ import com.httydcraft.authcraft.core.server.commands.annotations.AuthenticationS
 import com.httydcraft.authcraft.core.server.commands.impl.LoginCommandImplementation;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.core.step.impl.LoginAuthenticationStep;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import revxrsal.commands.annotation.Command;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
@@ -44,11 +45,11 @@ public class LoginCommand {
         Preconditions.checkNotNull(player, "player must not be null");
         Preconditions.checkNotNull(account, "account must not be null");
         Preconditions.checkNotNull(password, "password must not be null");
-        LOGGER.atFine().log("Executing login for player: %s", player.getNickname());
+        SecurityAuditLogger.logSuccess("Login command executed", player, "Attempting login");
 
         LoginCommandImplementation impl = new LoginCommandImplementation(plugin);
         impl.performLogin(player, account, password);
-        LOGGER.atFine().log("Delegated login to implementation for account: %s", account.getPlayerId());
+        SecurityAuditLogger.logSuccess("Delegated login to implementation", player, "Delegated for account: " + account.getPlayerId());
     }
     // #endregion
 }

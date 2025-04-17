@@ -11,10 +11,11 @@ import com.httydcraft.authcraft.api.step.MessageableAuthenticationStep;
 import com.httydcraft.authcraft.core.config.message.server.ServerMessageContext;
 import com.httydcraft.authcraft.core.step.AuthenticationStepTemplate;
 import com.httydcraft.authcraft.core.step.creators.AuthenticationStepFactoryTemplate;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
- * Authentication step for player login.
+ * Authentication step for player login in AuthCraft.
  * Prompts the player to enter their login credentials.
  */
 public class LoginAuthenticationStep extends AuthenticationStepTemplate implements MessageableAuthenticationStep {
@@ -33,6 +34,7 @@ public class LoginAuthenticationStep extends AuthenticationStepTemplate implemen
         super(STEP_NAME, context);
         Preconditions.checkNotNull(context, "context must not be null");
         LOGGER.atFine().log("Initialized LoginAuthenticationStep for account: %s", context.getAccount().getPlayerId());
+        LOGGER.atFine().log("LoginAuthenticationStep initialized");
     }
     // #endregion
 
@@ -73,15 +75,28 @@ public class LoginAuthenticationStep extends AuthenticationStepTemplate implemen
     public void process(ServerPlayer player) {
         Preconditions.checkNotNull(player, "player must not be null");
         Account account = authenticationStepContext.getAccount();
+        SecurityAuditLogger.logSuccess("LoginAuthenticationStep", player, String.format("Step started for player: %s, account: %s", player.getName(), account != null ? account.getPlayerId() : "null"));
+        if (account == null) {
+            SecurityAuditLogger.logFailure("LoginAuthenticationStep", player, "Account is null");
+            LOGGER.atWarning().log("Auth fail: login step for player %s, reason: account is null in LoginAuthenticationStep", player.getNickname());
+            player.sendMessage(PLUGIN.getConfig().getServerMessages().getMessage("account-not-found"));
+            return;
+        }
         PluginConfig config = PLUGIN.getConfig();
-        player.sendMessage(config.getServerMessages().getMessage("login-chat", new ServerMessageContext(account)));
-        AuthPlugin.instance()
-                .getCore()
-                .createTitle(config.getServerMessages().getMessage("login-title"))
-                .subtitle(config.getServerMessages().getMessage("login-subtitle"))
-                .stay(120)
-                .send(player);
-        LOGGER.atFine().log("Processed login step for player: %s", player.getNickname());
+        try {
+            player.sendMessage(config.getServerMessages().getMessage("login-chat", new ServerMessageContext(account)));
+            AuthPlugin.instance()
+                    .getCore()
+                    .createTitle(config.getServerMessages().getMessage("login-title"))
+                    .subtitle(config.getServerMessages().getMessage("login-subtitle"))
+                    .stay(120)
+                    .send(player);
+            LOGGER.atFine().log("Processed login step for player: %s", player.getNickname());
+            SecurityAuditLogger.logSuccess("LoginAuthenticationStep", player, "Login prompt sent to player: " + player.getName());
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("LoginAuthenticationStep", player, "LoginAuthenticationStep failed for player: " + (player != null ? player.getName() : "null") + ", error: " + ex.getMessage());
+            throw ex;
+        }
     }
     // #endregion
 
@@ -106,6 +121,12 @@ public class LoginAuthenticationStep extends AuthenticationStepTemplate implemen
          */
         @Override
         public LoginAuthenticationStep createNewAuthenticationStep(AuthenticationStepContext context) {
+            if (context == null) {
+                SecurityAuditLogger.logFailure("LoginAuthenticationStepFactory", null, "Context is null on step factory event");
+                LOGGER.atWarning().log("Auth fail: login step factory, reason: context is null");
+                return null;
+            }
+            SecurityAuditLogger.logSuccess("LoginAuthenticationStepFactory", null, String.format("Step factory event triggered for player: %s", context.getAccount() != null && context.getAccount().getPlayer().isPresent() ? context.getAccount().getPlayer().get().getName() : "null"));
             LOGGER.atFine().log("Creating new LoginAuthenticationStep");
             return new LoginAuthenticationStep(context);
         }

@@ -50,6 +50,7 @@ public class AuthenticationAttemptListener {
 
         if (event.isRightPassword()) {
             LOGGER.atFine().log("Correct password for account: %s", account.getPlayerId());
+            SecurityAuditLogger.logSuccess("AuthenticationAttemptListener", account.getPlayer().orElse(null), "Correct password in AccountTryLoginEvent");
             return;
         }
 
@@ -59,6 +60,7 @@ public class AuthenticationAttemptListener {
             account.getPlayer().ifPresent(player ->
                     player.sendMessage(plugin.getConfig().getServerMessages().getMessage("wrong-password")));
             LOGGER.atFine().log("No attempt limit, sent wrong-password message to account: %s", account.getPlayerId());
+            SecurityAuditLogger.logFailure("AuthenticationAttemptListener", account.getPlayer().orElse(null), "Wrong password, no attempt limit");
             return;
         }
 
@@ -68,11 +70,13 @@ public class AuthenticationAttemptListener {
                 .getMessage("wrong-password",
                         MessageContext.of("%attempts%", Integer.toString(maxAttempts - loginAttempts)))));
         LOGGER.atFine().log("Wrong password for account: %s, attempts: %d", account.getPlayerId(), loginAttempts);
+        SecurityAuditLogger.logFailure("AuthenticationAttemptListener", account.getPlayer().orElse(null), "Wrong password, attempt " + loginAttempts + " of " + maxAttempts);
 
         if (loginAttempts >= maxAttempts) {
             account.getPlayer().ifPresent(player ->
                     player.disconnect(plugin.getConfig().getServerMessages().getMessage("attempts-limit")));
             LOGGER.atInfo().log("Account %s reached attempt limit, disconnected", account.getPlayerId());
+            SecurityAuditLogger.logFailure("AuthenticationAttemptListener", account.getPlayer().orElse(null), "Reached password attempt limit, disconnected");
         }
     }
 
@@ -89,6 +93,7 @@ public class AuthenticationAttemptListener {
                 .ifPresent(id -> {
                     loginAttemptCounts.remove(id);
                     LOGGER.atFine().log("Cleared login attempts for account: %s", id);
+                    SecurityAuditLogger.logSuccess("AuthenticationAttemptListener", null, "Cleared login attempts for account: " + id);
                 });
     }
     // #endregion

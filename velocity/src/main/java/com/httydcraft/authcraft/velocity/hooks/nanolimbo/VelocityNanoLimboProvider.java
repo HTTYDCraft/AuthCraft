@@ -3,9 +3,11 @@ package com.httydcraft.authcraft.velocity.hooks.nanolimbo;
 import com.google.common.base.Preconditions;
 import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.core.hooks.nanolimbo.NanoLimboProvider;
+
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
-import com.velocitywired.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
+
 import ua.nanit.limbo.NanoLimbo;
 import ua.nanit.limbo.server.data.InfoForwarding;
 

@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.api.AuthPlugin;
 import com.httydcraft.authcraft.core.hooks.VkPluginHook;
-import com.ubivashka.vk.bungee.BungeeVkApiPlugin;
+import com.httydcraft.vk.api.bungee.BungeeVkApiPlugin;
 import com.vk.api.sdk.client.VkApiClient;
 import com.vk.api.sdk.client.actors.GroupActor;
 

@@ -56,7 +56,7 @@ public class GoogleCommand {
         accountStorage.getAccount(id).thenAccept(account -> {
             if (account == null || !account.isRegistered()) {
                 player.sendMessage(config.getServerMessages().getMessage("account-not-found"));
-                LOGGER.atFine().log("Account not found for player: %s", player.getNickname());
+                LOGGER.atWarning().log("Auth fail: player %s [%s], reason: account not found", player.getNickname(), player.getPlayerIp());
                 return;
             }
 

@@ -1,4 +1,7 @@
 name: AuthCraft
 version: '1.0-SNAPSHOT'
-main: com.httydcraft.authCraft.AuthCraft
+main: com.httydcraft.authcraft.spigot.SpigotAuthPluginBootstrap
 api-version: '1.18'
+depend: [VK-API, JavaTelegramBotApi, JDA, NanoLimboSpigot]
+authors: [BezzubickMCPlay]
+description: Полноценная система авторизации AuthCraft для Minecraft Spigot с поддержкой VK, Telegram, Discord и Limbo.

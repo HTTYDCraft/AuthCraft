@@ -15,7 +15,7 @@ import com.httydcraft.authcraft.bangee.hooks.nanolimbo.BungeeNanoLimboPluginHook
 import com.httydcraft.authcraft.bangee.listener.AuthenticationListener;
 import com.httydcraft.authcraft.bangee.listener.VkDispatchListener;
 import com.httydcraft.authcraft.core.management.BaseLibraryManagement;
-import com.ubivashka.vk.bungee.BungeeVkApiPlugin;
+import com.httydcraft.vk.api.bungee.BungeeVkApiPlugin;
 import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
 import net.md_5.bungee.api.plugin.Plugin;
 

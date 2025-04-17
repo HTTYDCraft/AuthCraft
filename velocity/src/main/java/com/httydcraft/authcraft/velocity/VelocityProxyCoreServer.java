@@ -14,12 +14,14 @@ import com.httydcraft.authcraft.velocity.scheduler.VelocitySchedulerWrapper;
 import com.httydcraft.authcraft.api.server.bossbar.ServerBossbar;
 import com.httydcraft.authcraft.api.server.message.ServerComponent;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
-import com.httydcraft.authcraft.api.server.proxy.ProxyServer;
 import com.httydcraft.authcraft.api.server.scheduler.ServerScheduler;
 import com.httydcraft.authcraft.api.server.title.ServerTitle;
 import com.httydcraft.authcraft.velocity.server.VelocityProxyServer;
+
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -217,17 +219,13 @@ public class VelocityProxyCoreServer implements CoreServer {
      * @return An optional {@link ProxyServer}.
      */
     @Override
-    public Optional<ProxyServer> serverFromName(String serverName) {
-        Preconditions.checkNotNull(serverName, "serverName must not be null");
+    public Optional<com.httydcraft.authcraft.api.server.proxy.ProxyServer> serverFromName(String serverName) {
         Optional<RegisteredServer> serverOptional = server.getServer(serverName);
         LimboPluginHook limboHook = AuthPlugin.instance().getHook(LimboPluginHook.class);
-        if (!serverOptional.isPresent() && limboHook != null) {
-            LOGGER.atFine().log("Creating limbo server for name: %s", serverName);
+        if (!serverOptional.isPresent() && limboHook != null)
             return Optional.of(limboHook.createServer(serverName));
-        }
-        Optional<ProxyServer> result = serverOptional.map(VelocityProxyServer::new);
-        LOGGER.atFine().log("Retrieved server %s: %s", serverName, result.isPresent() ? "found" : "not found");
-        return result;
+
+        return serverOptional.map(VelocityProxyServer::new);
     }
 
     /**

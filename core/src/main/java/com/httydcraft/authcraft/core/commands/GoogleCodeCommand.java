@@ -60,12 +60,14 @@ public class GoogleCodeCommand implements OrphanCommand {
         if (linkUserKey == null || linkUser.isIdentifierDefaultOrNull()) {
             actorWrapper.reply(linkType.getLinkMessages().getStringMessage("google-code-account-not-have-google", linkType.newMessageContext(account)));
             LOGGER.atFine().log("No Google authenticator linked for account: %s", account.getName());
+            SecurityAuditLogger.logFailure("GoogleCodeCommand", account.getPlayer().orElse(null), "No Google authenticator linked for account: " + account.getName());
             return;
         }
 
         if (!plugin.getLinkEntryBucket().find(account.getPlayerId(), GoogleLinkType.getInstance()).isPresent()) {
             actorWrapper.reply(linkType.getLinkMessages().getStringMessage("google-code-not-need-enter", linkType.newMessageContext(account)));
             LOGGER.atFine().log("No Google authentication required for account: %s", account.getName());
+            SecurityAuditLogger.logFailure("GoogleCodeCommand", account.getPlayer().orElse(null), "No Google authentication required for account: " + account.getName());
             return;
         }
 
@@ -74,11 +76,13 @@ public class GoogleCodeCommand implements OrphanCommand {
             account.getCurrentAuthenticationStep().getAuthenticationStepContext().setCanPassToNextStep(true);
             account.nextAuthenticationStep(plugin.getAuthenticationContextFactoryBucket().createContext(account));
             LOGGER.atInfo().log("Google code verified for account: %s", account.getName());
+            SecurityAuditLogger.logSuccess("GoogleCodeCommand", account.getPlayer().orElse(null), "Google code verified for account: " + account.getName());
             return;
         }
 
         actorWrapper.reply(linkType.getLinkMessages().getStringMessage("google-code-not-valid", linkType.newMessageContext(account)));
         LOGGER.atWarning().log("Invalid Google code for account: %s", account.getName());
+        SecurityAuditLogger.logFailure("GoogleCodeCommand", account.getPlayer().orElse(null), "Invalid Google code for account: " + account.getName());
     }
     // #endregion
 }

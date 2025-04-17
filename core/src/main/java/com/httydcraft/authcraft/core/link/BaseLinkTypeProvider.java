@@ -90,9 +90,9 @@ public class BaseLinkTypeProvider implements LinkTypeProvider {
      */
     @Override
     public Collection<LinkType> getLinkTypes() {
-        ImmutableCollection<LinkType> types = Maps.immutableEnumMap(linkTypeMap).values();
-        LOGGER.atFine().log("Retrieved %d link types", types.size());
-        return types;
+        LOGGER.atFine().log("Retrieved %d link types");
+        return linkTypeMap.values();
     }
+
     // #endregion
 }

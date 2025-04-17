@@ -32,6 +32,7 @@ public class TelegramCommandRegistry extends MessengerCommandRegistry {
     public TelegramCommandRegistry() {
         super(COMMAND_HANDLER, TelegramLinkType.getInstance());
         LOGGER.atInfo().log("Initializing TelegramCommandRegistry");
+        SecurityAuditLogger.logSuccess("TelegramCommandRegistry", null, "TelegramCommandRegistry initialized");
 
         COMMAND_HANDLER.registerContextResolver(LinkCommandActorWrapper.class, context -> {
             Preconditions.checkNotNull(context, "context must not be null");
@@ -58,6 +59,7 @@ public class TelegramCommandRegistry extends MessengerCommandRegistry {
             if (exception.response().errorCode() == 409) {
                 TELEGRAM_HOOK.getTelegramBot().removeGetUpdatesListener();
                 LOGGER.atSevere().log("Telegram bot disabled due to multiple bot instances (error 409)");
+                SecurityAuditLogger.logFailure("TelegramCommandRegistry", null, "Telegram bot disabled due to multiple bot instances (error 409)");
                 System.err.println("Telegram bot disabled because you are already running another bot instance!");
                 System.err.println("Please use another token if you need to run multiple bot instances");
             }

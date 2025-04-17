@@ -10,6 +10,7 @@ import com.httydcraft.authcraft.api.link.LinkType;
 import com.httydcraft.multimessenger.core.keyboard.Keyboard;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.orphan.OrphanCommand;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -38,11 +39,18 @@ public class AccountCommand implements OrphanCommand {
         Preconditions.checkNotNull(account, "account must not be null");
 
         LOGGER.atInfo().log("Processing account menu command for account: %s", account.getName());
+        SecurityAuditLogger.logSuccess("AccountCommand", account.getPlayer().orElse(null), String.format("Account menu command started for account: %s", account.getName()));
         Keyboard accountKeyboard = linkType.getSettings().getKeyboards().createKeyboard("account", "%account_name%", account.getName());
-        actorWrapper.send(linkType.newMessageBuilder(linkType.getLinkMessages().getMessage("account-control", linkType.newMessageContext(account)))
-                .keyboard(accountKeyboard)
-                .build());
-        LOGGER.atInfo().log("Displayed account menu for account: %s", account.getName());
+        try {
+            actorWrapper.send(linkType.newMessageBuilder(linkType.getLinkMessages().getMessage("account-control", linkType.newMessageContext(account)))
+                    .keyboard(accountKeyboard)
+                    .build());
+            LOGGER.atInfo().log("Displayed account menu for account: %s", account.getName());
+            SecurityAuditLogger.logSuccess("AccountCommand", account.getPlayer().orElse(null), "Displayed account menu for account: " + account.getName());
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("AccountCommand", account.getPlayer().orElse(null), "Failed to display account menu for account: " + (account != null ? account.getName() : "null") + ", error: " + ex.getMessage());
+            throw ex;
+        }
     }
     // #endregion
 }

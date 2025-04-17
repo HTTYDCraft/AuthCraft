@@ -3,6 +3,7 @@ package com.httydcraft.authcraft.core.commands;
 import com.google.common.base.Preconditions;
 import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.api.AuthPlugin;
+import com.httydcraft.authcraft.api.account.Account;
 import com.httydcraft.authcraft.api.bucket.LinkConfirmationBucket;
 import com.httydcraft.authcraft.api.commands.MessageableCommandActor;
 import com.httydcraft.authcraft.api.config.PluginConfig;

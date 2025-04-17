@@ -1,8 +1,10 @@
-name: mcAuth
-main: com.httydcraft.authcraft.bangee.BungeeAuthPluginBootstrap
+name: AuthCraft
+main: com.httydcraft.authcraft.bungee.BungeeAuthPluginBootstrap
 version: ${project.version}
 softDepends:
   - VK-API
   - JavaTelegramBotApi
+  - JDA
   - NanoLimboBungee
 author: BezzubickMCPlay
+description: Полноценная система авторизации AuthCraft для Minecraft BungeeCord с поддержкой VK, Telegram, Discord и Limbo.

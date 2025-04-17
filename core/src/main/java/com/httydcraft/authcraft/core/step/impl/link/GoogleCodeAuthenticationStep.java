@@ -44,6 +44,7 @@ public class GoogleCodeAuthenticationStep extends AuthenticationStepTemplate imp
         this.entryUser = new BaseLinkEntryUser(GoogleLinkType.getInstance(), account,
                 account.findFirstLinkUserOrNew(GoogleLinkType.LINK_USER_FILTER, GoogleLinkType.getInstance()).getLinkUserInfo());
         LOGGER.atFine().log("Initialized GoogleCodeAuthenticationStep for account: %s", account.getPlayerId());
+        SecurityAuditLogger.logSuccess("GoogleCodeAuthenticationStep", account != null ? account.getPlayer().orElse(null) : null, String.format("Initialized GoogleCodeAuthenticationStep for account: %s", account != null ? account.getPlayerId() : "null"));
     }
     // #endregion
 
@@ -115,6 +116,13 @@ public class GoogleCodeAuthenticationStep extends AuthenticationStepTemplate imp
     public void process(ServerPlayer player) {
         Preconditions.checkNotNull(player, "player must not be null");
         Account account = authenticationStepContext.getAccount();
+        if (account == null) {
+            LOGGER.atWarning().log("Auth fail: google code step for player %s, reason: account is null in GoogleCodeAuthenticationStep", player.getNickname());
+            SecurityAuditLogger.logFailure("GoogleCodeAuthenticationStep", player, "Account is null on Google code step");
+            player.sendMessage(PLUGIN.getConfig().getServerMessages().getSubMessages("google").getMessage("account-not-found"));
+            return;
+        }
+        SecurityAuditLogger.logSuccess("GoogleCodeAuthenticationStep", player, String.format("Google code step started for player: %s, account: %s", player.getName(), account.getPlayerId()));
         PluginConfig config = AuthPlugin.instance().getConfig();
         Messages<ServerComponent> googleMessages = config.getServerMessages().getSubMessages("google");
         player.sendMessage(googleMessages.getMessage("need-code-chat", new ServerMessageContext(account)));
@@ -125,6 +133,7 @@ public class GoogleCodeAuthenticationStep extends AuthenticationStepTemplate imp
                 .stay(120)
                 .send(player);
         LOGGER.atFine().log("Processed Google code step for player: %s", player.getNickname());
+        SecurityAuditLogger.logSuccess("GoogleCodeAuthenticationStep", player, String.format("Google code prompt sent to player: %s, account: %s", player.getName(), account.getPlayerId()));
     }
     // #endregion
 

@@ -16,8 +16,8 @@ import com.httydcraft.authcraft.api.link.user.LinkUser;
 import com.httydcraft.authcraft.core.server.commands.annotations.GoogleUse;
 import io.github.revxrsal.eventbus.EventBus;
 import revxrsal.commands.annotation.DefaultFor;
-import revxrsal.commands.annotation.Dependency;
 import revxrsal.commands.orphan.OrphanCommand;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -70,9 +70,15 @@ public class GoogleUnlinkCommand implements OrphanCommand {
                         LOGGER.atFine().log("Google unlink cancelled for account: %s", account.getName());
                         return;
                     }
-                    linkUser.getLinkUserInfo().setIdentificator(GoogleLinkType.getInstance().getDefaultIdentificator());
-                    accountDatabase.updateAccountLinks(account);
-                    LOGGER.atInfo().log("Google authenticator unlinked for account: %s", account.getName());
+                    try {
+                        linkUser.getLinkUserInfo().setIdentificator(GoogleLinkType.getInstance().getDefaultIdentificator());
+                        accountDatabase.updateAccountLinks(account);
+                        LOGGER.atInfo().log("Google authenticator unlinked for account: %s", account.getName());
+                        SecurityAuditLogger.logSuccess("GoogleUnlinkCommand", account.getPlayer().orElse(null), "Google authenticator unlinked for account: " + account.getName());
+                    } catch (Exception ex) {
+                        SecurityAuditLogger.logFailure("GoogleUnlinkCommand", null, "Failed to unlink Google authenticator for account: " + (account != null ? account.getName() : "null") + ", error: " + ex.getMessage());
+                        throw ex;
+                    }
                 });
     }
     // #endregion

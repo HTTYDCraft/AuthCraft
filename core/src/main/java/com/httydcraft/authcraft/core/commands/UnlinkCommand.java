@@ -10,9 +10,9 @@ import com.httydcraft.authcraft.core.commands.annotation.ConfigurationArgumentEr
 import com.httydcraft.authcraft.core.link.LinkCommandActorWrapper;
 import com.httydcraft.authcraft.api.link.LinkType;
 import com.httydcraft.authcraft.api.link.user.LinkUser;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import io.github.revxrsal.eventbus.EventBus;
 import revxrsal.commands.annotation.DefaultFor;
-import revxrsal.commands.annotation.Dependency;
 import revxrsal.commands.orphan.OrphanCommand;
 
 // #region Class Documentation
@@ -47,18 +47,26 @@ public class UnlinkCommand implements OrphanCommand {
         Preconditions.checkNotNull(account, "account must not be null");
 
         LOGGER.atInfo().log("Processing unlink command for account: %s, linkType: %s", account.getName(), linkType);
+        SecurityAuditLogger.logSuccess("UnlinkCommand", account.getPlayer().orElse(null), String.format("Unlink command started for account: %s, linkType: %s", account.getName(), linkType));
         LinkUser linkUser = account.findFirstLinkUserOrNew(user -> user.getLinkType().equals(linkType), linkType);
-        eventBus.publish(AccountUnlinkEvent.class, account, false, linkType, linkUser, linkUser.getLinkUserInfo().getIdentificator(), actorWrapper)
-                .thenAccept(result -> {
-                    if (result.getEvent().isCancelled()) {
-                        LOGGER.atFine().log("Unlink cancelled for account: %s", account.getName());
-                        return;
-                    }
-                    linkUser.getLinkUserInfo().setIdentificator(linkType.getDefaultIdentificator());
-                    accountDatabase.updateAccountLinks(account);
-                    actorWrapper.reply(linkType.getLinkMessages().getMessage("unlinked", linkType.newMessageContext(account)));
-                    LOGGER.atInfo().log("Unlinked account: %s from linkType: %s", account.getName(), linkType);
-                });
+        try {
+            eventBus.publish(AccountUnlinkEvent.class, account, false, linkType, linkUser, linkUser.getLinkUserInfo().getIdentificator(), actorWrapper)
+                    .thenAccept(result -> {
+                        if (result.getEvent().isCancelled()) {
+                            LOGGER.atFine().log("Unlink cancelled for account: %s", account.getName());
+                            SecurityAuditLogger.logFailure("UnlinkCommand", account.getPlayer().orElse(null), "Unlink cancelled for account: " + account.getName() + ", linkType: " + linkType);
+                            return;
+                        }
+                        linkUser.getLinkUserInfo().setIdentificator(linkType.getDefaultIdentificator());
+                        accountDatabase.updateAccountLinks(account);
+                        actorWrapper.reply(linkType.getLinkMessages().getMessage("unlinked", linkType.newMessageContext(account)));
+                        LOGGER.atInfo().log("Unlinked account: %s from linkType: %s", account.getName(), linkType);
+                        SecurityAuditLogger.logSuccess("UnlinkCommand", account.getPlayer().orElse(null), "Unlinked account: " + account.getName() + " from linkType: " + linkType);
+                    });
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("UnlinkCommand", account.getPlayer().orElse(null), "Failed to unlink account: " + (account != null ? account.getName() : "null") + " from linkType: " + linkType + ", error: " + ex.getMessage());
+            throw ex;
+        }
     }
     // #endregion
 }

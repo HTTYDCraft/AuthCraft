@@ -6,6 +6,7 @@ import com.httydcraft.authcraft.bangee.commands.BungeeServerCommandActor;
 import com.httydcraft.authcraft.api.config.message.MessageContext;
 import com.httydcraft.authcraft.api.config.message.Messages;
 import com.httydcraft.authcraft.api.server.message.ServerComponent;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import org.jetbrains.annotations.NotNull;
 import revxrsal.commands.bungee.BungeeCommandActor;
 import revxrsal.commands.bungee.exception.*;
@@ -47,6 +48,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled SenderNotPlayerException");
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: sender is not a player");
         sendComponent(actor, messages.getMessage("players-only"));
     }
 
@@ -61,6 +63,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled SenderNotConsoleException");
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: sender is not console");
         sendComponent(actor, messages.getMessage("console-only"));
     }
 
@@ -75,6 +78,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled InvalidPlayerException for input: %s", exception.getInput());
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: invalid player " + exception.getInput());
         sendComponent(actor, messages.getMessage("player-offline",
                 MessageContext.of("%player_name%", exception.getInput())));
     }
@@ -105,6 +109,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled EnumNotFoundException for input: %s", exception.getInput());
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: invalid enum value " + exception.getInput());
         sendComponent(actor, messages.getMessage("invalid-enum",
                 MessageContext.of("%input%", exception.getInput())));
     }
@@ -120,6 +125,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled InvalidNumberException for input: %s", exception.getInput());
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: invalid number " + exception.getInput());
         sendComponent(actor, messages.getMessage("unresolved-number",
                 MessageContext.of("%input%", exception.getInput())));
     }
@@ -135,6 +141,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled InvalidUUIDException for input: %s", exception.getInput());
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: invalid UUID " + exception.getInput());
         sendComponent(actor, messages.getMessage("invalid-uuid",
                 MessageContext.of("%input%", exception.getInput())));
     }
@@ -150,6 +157,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled InvalidURLException for input: %s", exception.getInput());
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: invalid URL " + exception.getInput());
         sendComponent(actor, messages.getMessage("invalid-url",
                 MessageContext.of("%input%", exception.getInput())));
     }
@@ -180,6 +188,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled NoPermissionException");
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: no permission");
         sendComponent(actor, messages.getMessage("no-permission"));
     }
 
@@ -236,6 +245,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled InvalidCommandException for input: %s", exception.getInput());
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: invalid command " + exception.getInput());
         sendComponent(actor, messages.getMessage("invalid-command",
                 MessageContext.of("%input%", exception.getInput())));
     }
@@ -280,6 +290,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled CooldownException with duration: %d ms", exception.getTimeLeftMillis());
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Blocked command: cooldown " + exception.getTimeLeftMillis() + "ms left");
         sendComponent(actor, messages.getMessage("cooldown",
                 MessageContext.of("%time%", String.valueOf(exception.getTimeLeftMillis() / 1000))));
     }
@@ -324,7 +335,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(exception, "exception must not be null");
         LOGGER.atFine().log("Handled NumberNotInRangeException for input: %s", exception.getInput());
         sendComponent(actor, messages.getMessage("number-not-in-range",
-                MessageContext.of("%input%", exception.getInput())));
+                MessageContext.of("%input%")))    ;
     }
 
     /**
@@ -338,6 +349,7 @@ public class BungeeExceptionHandler extends BungeeExceptionAdapter {
         Preconditions.checkNotNull(actor, "actor must not be null");
         Preconditions.checkNotNull(throwable, "throwable must not be null");
         LOGGER.atSevere().withCause(throwable).log("Handled unhandled exception");
+        SecurityAuditLogger.logFailure("CommandEvent", null, "Unhandled exception: " + throwable.getClass().getSimpleName() + ": " + throwable.getMessage());
         sendComponent(actor, messages.getMessage("command-invocation"));
     }
     // #endregion

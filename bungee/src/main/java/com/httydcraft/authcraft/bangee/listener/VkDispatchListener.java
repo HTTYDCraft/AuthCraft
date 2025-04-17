@@ -3,8 +3,9 @@ package com.httydcraft.authcraft.bangee.listener;
 import com.google.common.base.Preconditions;
 import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.core.command.DispatchCommandListener;
-import com.ubivashka.vk.bungee.events.VKCallbackButtonPressEvent;
-import com.ubivashka.vk.bungee.events.VKMessageEvent;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
+import com.httydcraft.vk.api.bungee.events.VKCallbackButtonPressEvent;
+import com.httydcraft.vk.api.bungee.events.VKMessageEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import org.jetbrains.annotations.NotNull;
@@ -36,6 +37,7 @@ public class VkDispatchListener extends DispatchCommandListener implements Liste
     public void onMessage(@NotNull VKMessageEvent event) {
         Preconditions.checkNotNull(event, "event must not be null");
         LOGGER.atFine().log("Handling VK message from peer: %d", event.getPeer());
+        SecurityAuditLogger.logSuccess("VKMessageEvent", null, "VK message received from peer: " + event.getPeer());
         onMessage(event.getMessage(), event.getPeer());
     }
 
@@ -48,6 +50,7 @@ public class VkDispatchListener extends DispatchCommandListener implements Liste
     public void onButtonPress(@NotNull VKCallbackButtonPressEvent event) {
         Preconditions.checkNotNull(event, "event must not be null");
         LOGGER.atFine().log("Handling VK button press");
+        SecurityAuditLogger.logSuccess("VKCallbackButtonPressEvent", null, "VK button pressed");
         onButtonClick(event.getButtonEvent());
     }
     // #endregion

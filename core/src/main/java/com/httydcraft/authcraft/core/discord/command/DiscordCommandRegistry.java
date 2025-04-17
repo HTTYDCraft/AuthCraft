@@ -51,7 +51,7 @@ public class DiscordCommandRegistry extends MessengerCommandRegistry {
         COMMAND_HANDLER.disableStackTraceSanitizing();
         COMMAND_HANDLER.registerContextResolver(LinkCommandActorWrapper.class, context -> {
             LinkCommandActorWrapper wrapper = new DiscordCommandActorWrapper(context.actor());
-            LOGGER.atFine().log("Resolved LinkCommandActorWrapper for actor: %s", context.actor().getId());
+            LOGGER.atFine().log("Resolved LinkCommandActorWrapper for actor: %s");
             return wrapper;
         });
 
@@ -100,7 +100,7 @@ public class DiscordCommandRegistry extends MessengerCommandRegistry {
     protected LinkCommandActorWrapper wrapActor(CommandActor actor) {
         Preconditions.checkNotNull(actor, "actor must not be null");
         DiscordCommandActorWrapper wrapper = new DiscordCommandActorWrapper(actor.as(JDAActor.class));
-        LOGGER.atFine().log("Wrapped actor into DiscordCommandActorWrapper: %s", actor.getId());
+        LOGGER.atFine().log("Wrapped actor into DiscordCommandActorWrapper: %s");
         return wrapper;
     }
     // #endregion

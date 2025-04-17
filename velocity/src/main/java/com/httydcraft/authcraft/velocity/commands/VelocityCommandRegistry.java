@@ -7,7 +7,7 @@ import com.httydcraft.authcraft.api.AuthPlugin;
 import com.httydcraft.authcraft.api.commands.MessageableCommandActor;
 import com.httydcraft.authcraft.velocity.VelocityAuthPluginBootstrap;
 import com.httydcraft.authcraft.api.account.Account;
-import com.httydcraft.authcraft.commands.exception.SendComponentException;
+import com.httydcraft.authcraft.core.server.commands.exception.SendComponentException;
 import com.httydcraft.authcraft.velocity.commands.exception.VelocityExceptionHandler;
 import com.httydcraft.authcraft.api.config.PluginConfig;
 import com.httydcraft.authcraft.api.config.message.MessageContext;

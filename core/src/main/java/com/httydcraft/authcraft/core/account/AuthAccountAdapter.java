@@ -1,4 +1,3 @@
-
 package com.httydcraft.authcraft.core.account;
 
 // region Imports
@@ -19,6 +18,7 @@ import com.httydcraft.authcraft.core.database.model.AccountLink;
 import com.httydcraft.authcraft.core.database.model.AuthAccount;
 import com.httydcraft.authcraft.core.link.user.AccountLinkAdapter;
 import com.google.common.collect.ImmutableList;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 // endregion
 
 /**
@@ -88,6 +88,7 @@ public class AuthAccountAdapter extends AccountTemplate {
     public void setCryptoProvider(CryptoProvider cryptoProvider) {
         Preconditions.checkNotNull(cryptoProvider, "CryptoProvider cannot be null");
         authAccount.setHashType(cryptoProvider);
+        SecurityAuditLogger.logSuccess("AuthAccountAdapter", null, "CryptoProvider changed for accountId: " + authAccount.getPlayerId());
     }
 
     @Override
@@ -109,6 +110,7 @@ public class AuthAccountAdapter extends AccountTemplate {
     public void setPasswordHash(HashedPassword hashedPassword) {
         Preconditions.checkNotNull(hashedPassword, "HashedPassword cannot be null");
         authAccount.setPasswordHash(hashedPassword.getHash());
+        SecurityAuditLogger.logSuccess("AuthAccountAdapter", null, "Password changed for accountId: " + authAccount.getPlayerId());
     }
 
     @Override
@@ -122,8 +124,10 @@ public class AuthAccountAdapter extends AccountTemplate {
         if (linkUsers.stream().noneMatch(existingUser -> existingUser.getLinkType().equals(linkUser.getLinkType()))) {
             linkUsers.add(linkUser);
             logger.atInfo().log("LinkUser added for account ID: %s", authAccount.getPlayerId());
+            SecurityAuditLogger.logSuccess("AuthAccountAdapter", null, "LinkUser added for accountId: " + authAccount.getPlayerId() + ", linkType: " + linkUser.getLinkType());
         } else {
             logger.atInfo().log("LinkUser already exists for account ID: %s", authAccount.getPlayerId());
+            SecurityAuditLogger.logFailure("AuthAccountAdapter", null, "LinkUser already exists for accountId: " + authAccount.getPlayerId() + ", linkType: " + linkUser.getLinkType());
         }
     }
 
@@ -155,6 +159,7 @@ public class AuthAccountAdapter extends AccountTemplate {
     public void setLastIpAddress(String hostString) {
         Preconditions.checkNotNull(hostString, "IP address cannot be null");
         authAccount.setLastIp(hostString);
+        SecurityAuditLogger.logSuccess("AuthAccountAdapter", null, "IP address updated for accountId: " + authAccount.getPlayerId() + ", ip: " + hostString);
     }
 
     @Override
@@ -165,6 +170,7 @@ public class AuthAccountAdapter extends AccountTemplate {
     @Override
     public void setLastSessionStartTimestamp(long currentTimeMillis) {
         authAccount.setLastSessionStartTimestamp(currentTimeMillis);
+        SecurityAuditLogger.logSuccess("AuthAccountAdapter", null, "Session started for accountId: " + authAccount.getPlayerId() + ", timestamp: " + currentTimeMillis);
     }
     // endregion
 

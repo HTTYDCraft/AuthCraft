@@ -270,20 +270,28 @@ public class AuthAccountDao extends BaseDaoImpl<AuthAccount, Long> {
      */
     public AuthAccount createOrUpdateAccount(Account account) {
         Preconditions.checkNotNull(account, "account must not be null");
-        AuthAccount authAccount = new AccountAdapter(account);
-        AuthAccount result = DEFAULT_EXCEPTION_CATCHER.execute(() -> {
-            Optional<AuthAccount> foundAccount = queryFirstAccountPlayerId(authAccount.getPlayerId());
-            if (foundAccount.isPresent()) {
-                authAccount.setId(foundAccount.get().getId());
-                update(authAccount);
-                LOGGER.atFine().log("Updated existing account: %s", authAccount.getPlayerId());
-            } else {
-                create(authAccount);
-                LOGGER.atFine().log("Created new account: %s", authAccount.getPlayerId());
+        SecurityAuditLogger.logSuccess("AccountDatabase: createOrUpdateAccount", null, "Account create/update requested for: " + account.getPlayerId());
+        return DEFAULT_EXCEPTION_CATCHER.execute(() -> {
+            try {
+                Optional<AuthAccount> foundAccount = queryFirstAccountPlayerId(account.getPlayerId());
+                if (foundAccount.isPresent()) {
+                    AuthAccount authAccount = new AccountAdapter(account);
+                    authAccount.setId(foundAccount.get().getId());
+                    update(authAccount);
+                    SecurityAuditLogger.logSuccess("AccountDatabase: createOrUpdateAccount", null, "Account updated: " + account.getPlayerId());
+                    LOGGER.atFine().log("Updated existing account: %s", account.getPlayerId());
+                } else {
+                    AuthAccount authAccount = new AccountAdapter(account);
+                    create(authAccount);
+                    SecurityAuditLogger.logSuccess("AccountDatabase: createOrUpdateAccount", null, "Account created: " + account.getPlayerId());
+                    LOGGER.atFine().log("Created new account: %s", account.getPlayerId());
+                }
+                return new AccountAdapter(account);
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("AccountDatabase: createOrUpdateAccount", null, "Failed to create/update account: " + account.getPlayerId() + ", error: " + ex.getMessage());
+                throw ex;
             }
-            return authAccount;
         });
-        return result;
     }
 
     /**
@@ -293,11 +301,18 @@ public class AuthAccountDao extends BaseDaoImpl<AuthAccount, Long> {
      */
     public void deleteAccountById(String id) {
         Preconditions.checkNotNull(id, "id must not be null");
-        DEFAULT_EXCEPTION_CATCHER.execute(() -> {
-            DeleteBuilder<AuthAccount, Long> deleteBuilder = deleteBuilder();
-            deleteBuilder.where().eq(AuthAccount.PLAYER_ID_FIELD_KEY, id);
-            int deleted = deleteBuilder.delete();
-            LOGGER.atFine().log("Deleted account by ID: %s, rows affected: %d", id, deleted);
+        SecurityAuditLogger.logSuccess("AccountDatabase: deleteAccountById", null, "Account delete requested for: " + id);
+        return DEFAULT_EXCEPTION_CATCHER.execute(() -> {
+            try {
+                DeleteBuilder<AuthAccount, Long> deleteBuilder = deleteBuilder();
+                deleteBuilder.where().eq(AuthAccount.PLAYER_ID_FIELD_KEY, id);
+                int deleted = deleteBuilder.delete();
+                SecurityAuditLogger.logSuccess("AccountDatabase: deleteAccountById", null, "Account deleted by ID: " + id + ", rows affected: " + deleted);
+                LOGGER.atFine().log("Deleted account by ID: %s, rows affected: %d", id, deleted);
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("AccountDatabase: deleteAccountById", null, "Failed to delete account by ID: " + id + ", error: " + ex.getMessage());
+                throw ex;
+            }
             return null;
         });
     }

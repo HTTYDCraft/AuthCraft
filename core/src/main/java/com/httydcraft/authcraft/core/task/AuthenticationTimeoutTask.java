@@ -4,10 +4,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.api.AuthPlugin;
 import com.httydcraft.authcraft.api.account.Account;
+import com.httydcraft.authcraft.api.link.user.entry.LinkEntryUser;
 import com.httydcraft.authcraft.api.model.AuthenticationTask;
 import com.httydcraft.authcraft.api.model.PlayerIdSupplier;
 import com.httydcraft.authcraft.api.server.scheduler.ServerScheduler;
+import com.httydcraft.authcraft.core.config.message.server.ServerMessageContext;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -18,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class AuthenticationTimeoutTask implements AuthenticationTask {
     private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
-    private final ServerScheduler proxyScheduler;
+    private final ServerScheduler scheduler;
     // #endregion
 
     // #region Constructor
@@ -29,26 +32,33 @@ public class AuthenticationTimeoutTask implements AuthenticationTask {
      */
     public AuthenticationTimeoutTask(AuthPlugin plugin) {
         Preconditions.checkNotNull(plugin, "plugin must not be null");
-        this.proxyScheduler = plugin.getCore().schedule(() -> {
+        this.scheduler = plugin.getCore().schedule(() -> {
             long now = System.currentTimeMillis();
-            for (String accountPlayerId : plugin.getAuthenticatingAccountBucket().getAccountIdEntries()) {
-                Account account = plugin.getAuthenticatingAccountBucket()
-                        .getAuthenticatingAccountNullable(PlayerIdSupplier.of(accountPlayerId));
-                if (account == null) {
-                    LOGGER.atFine().log("No account found for player ID: %s", accountPlayerId);
+            long authTimeoutMillis = plugin.getConfig().getAuthTime();
+
+            Collection<String> playerIds = plugin.getAuthenticatingAccountBucket().getAccountIdEntries();
+            for (String playerId : playerIds) {
+                PlayerIdSupplier playerIdSupplier = PlayerIdSupplier.of(playerId);
+                Account account = plugin.getAuthenticatingAccountBucket().getAuthenticatingAccountNullable(playerIdSupplier);
+                int accountEnterElapsedMillis = (int) (now - plugin.getAuthenticatingAccountBucket().getEnterTimestampOrZero(playerIdSupplier));
+
+                for (LinkEntryUser entryUser : plugin.getLinkEntryBucket().find(user -> user.getAccount().getPlayerId().equals(account.getPlayerId())))
+                    if (entryUser != null)
+                        try {
+                            authTimeoutMillis += entryUser.getLinkType().getSettings().getEnterSettings().getEnterDelay();
+                        } catch(UnsupportedOperationException ignored) { // If link type has no settings support
+                        }
+
+                if(!account.getPlayer().isPresent())
+                    plugin.getAuthenticatingAccountBucket().modifiable().removeIf(state -> state.getPlayerId().equals(playerId));
+
+                if (accountEnterElapsedMillis < authTimeoutMillis)
                     continue;
-                }
-                if (now >= account.getAuthenticationTimeout()) {
-                    account.getPlayer().ifPresent(player -> {
-                        player.kick(plugin.getConfig().getBossBarSettings()
-                                .getMessages().getMessage("timeout", new Date(account.getAuthenticationTimeout())));
-                        LOGGER.atFine().log("Kicked player ID: %s due to authentication timeout", accountPlayerId);
-                    });
-                    plugin.getAuthenticatingAccountBucket().removeAuthenticatingAccount(account);
-                }
+                account.getPlayer()
+                        .ifPresent(
+                                player -> player.disconnect(plugin.getConfig().getServerMessages().getMessage("time-left", new ServerMessageContext(account))));
             }
         }, 0, 1, TimeUnit.SECONDS);
-        LOGGER.atInfo().log("Initialized AuthenticationTimeoutTask");
     }
     // #endregion
 
@@ -58,7 +68,7 @@ public class AuthenticationTimeoutTask implements AuthenticationTask {
      */
     @Override
     public void stop() {
-        proxyScheduler.cancel();
+        scheduler.cancel();
         LOGGER.atInfo().log("Stopped AuthenticationTimeoutTask");
     }
     // #endregion

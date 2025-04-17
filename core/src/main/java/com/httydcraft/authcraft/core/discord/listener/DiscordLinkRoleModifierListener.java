@@ -16,6 +16,7 @@ import com.httydcraft.authcraft.api.link.user.info.LinkUserIdentificator;
 import com.httydcraft.authcraft.api.link.user.info.LinkUserInfo;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.core.step.impl.link.DiscordLinkAuthenticationStep;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import io.github.revxrsal.eventbus.SubscribeEvent;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
@@ -56,6 +57,12 @@ public class DiscordLinkRoleModifierListener {
             return;
         }
         Account account = event.getAccount();
+        SecurityAuditLogger.logSuccess("DiscordLinkRoleModifierListener: discord role update", null, "Discord role update triggered");
+        if (account == null) {
+            SecurityAuditLogger.logFailure("DiscordLinkRoleModifierListener", null, "Account is null on discord role update");
+            LOGGER.atFine().log("Account is null");
+            return;
+        }
         account.findFirstLinkUser(DiscordLinkType.LINK_USER_FILTER)
                 .filter(linkUser -> !linkUser.isIdentifierDefaultOrNull())
                 .map(LinkUser::getLinkUserInfo)
@@ -76,6 +83,12 @@ public class DiscordLinkRoleModifierListener {
     public void onDiscordLink(AccountLinkEvent event) {
         Preconditions.checkNotNull(event, "event must not be null");
         Account account = event.getAccount();
+        SecurityAuditLogger.logSuccess("DiscordLinkRoleModifierListener: discord role update", null, "Discord role update triggered");
+        if (account == null) {
+            SecurityAuditLogger.logFailure("DiscordLinkRoleModifierListener", null, "Account is null on discord role update");
+            LOGGER.atFine().log("Account is null");
+            return;
+        }
         LinkType linkType = event.getLinkType();
         if (linkType != DiscordLinkType.getInstance()) {
             LOGGER.atFine().log("Link type is not Discord: %s", linkType.getName());
@@ -144,7 +157,10 @@ public class DiscordLinkRoleModifierListener {
                     LOGGER.atInfo().log("Removed role %s from member %d", role.getId(), discordId);
                 }
             }
-        }, throwable -> LOGGER.atSevere().withCause(throwable).log("Failed to retrieve member for discordId: %d", discordId));
+        }, throwable -> {
+            SecurityAuditLogger.logFailure("DiscordLinkRoleModifierListener", null, "Failed to update Discord roles");
+            LOGGER.atSevere().withCause(throwable).log("Failed to retrieve member for discordId: %d", discordId);
+        });
     }
     // #endregion
 }

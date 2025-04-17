@@ -8,6 +8,7 @@ import com.httydcraft.authcraft.api.link.LinkType;
 import com.httydcraft.multimessenger.core.keyboard.Keyboard;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.orphan.OrphanCommand;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -40,10 +41,16 @@ public class AdminPanelCommand implements OrphanCommand {
         }
 
         Keyboard adminPanelKeyboard = linkType.getSettings().getKeyboards().createKeyboard("admin-panel");
-        actorWrapper.send(linkType.newMessageBuilder(linkType.getLinkMessages().getMessage("admin-panel"))
-                .keyboard(adminPanelKeyboard)
-                .build());
-        LOGGER.atInfo().log("Admin panel displayed for userId: %s", actorWrapper.userId());
+        try {
+            actorWrapper.send(linkType.newMessageBuilder(linkType.getLinkMessages().getMessage("admin-panel"))
+                    .keyboard(adminPanelKeyboard)
+                    .build());
+            LOGGER.atInfo().log("Admin panel displayed for userId: %s", actorWrapper.userId());
+            SecurityAuditLogger.logSuccess("AdminPanelCommand", null, "Admin panel displayed for userId: " + actorWrapper.userId());
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("AdminPanelCommand", null, "Failed to display admin panel for userId: " + actorWrapper.userId() + ", error: " + ex.getMessage());
+            throw ex;
+        }
     }
     // #endregion
 }

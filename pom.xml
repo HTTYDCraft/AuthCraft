@@ -11,6 +11,7 @@
         <module>core</module>
         <module>bungee</module>
         <module>velocity</module>
+        <module>spigot</module>
     </modules>
 
     <properties>
@@ -73,6 +74,7 @@
 
         <guava.version>33.3.1-jre</guava.version>
         <flogger.version>0.8</flogger.version>
+        <luckperms.version>5.4</luckperms.version>
     </properties>
 
     <dependencyManagement>
@@ -298,7 +300,7 @@
                 <version>${velocity-api.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.github.httydcraft</groupId>
+                <groupId>io.github.bivashy</groupId>
                 <artifactId>velocity-proxy</artifactId>
                 <version>${velocity-proxy.version}</version>
             </dependency>
@@ -329,6 +331,14 @@
                 <groupId>com.github.HTTYDCraft-Forks.NanoLimboPlugin</groupId>
                 <artifactId>api</artifactId>
                 <version>${nanolimbo.version}</version>
+            </dependency>
+
+            <!-- LuckPerms API -->
+            <dependency>
+                <groupId>net.luckperms</groupId>
+                <artifactId>api</artifactId>
+                <version>${luckperms.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <!-- Google Guava: URL: https://github.com/google/guava -->

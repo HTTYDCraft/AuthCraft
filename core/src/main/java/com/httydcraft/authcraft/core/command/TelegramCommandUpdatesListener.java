@@ -45,9 +45,20 @@ public class TelegramCommandUpdatesListener extends TelegramUpdatesListener {
      */
     @Override
     public void processValidUpdates(List<Update> updates) {
-        Preconditions.checkNotNull(updates, "updates must not be null");
-        Preconditions.checkArgument(!updates.isEmpty(), "updates must not be empty");
+        try {
+            Preconditions.checkNotNull(updates, "updates must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("TelegramCommandUpdatesListener", null, "updates list is null");
+            throw ex;
+        }
+        try {
+            Preconditions.checkArgument(!updates.isEmpty(), "updates must not be empty");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("TelegramCommandUpdatesListener", null, "updates list is empty");
+            throw ex;
+        }
 
+        SecurityAuditLogger.logSuccess("TelegramCommandUpdatesListener", null, "Processing " + updates.size() + " valid updates");
         LOGGER.atInfo().log("Processing %d valid updates", updates.size());
         updates.forEach(this::processUpdate);
     }
@@ -58,7 +69,12 @@ public class TelegramCommandUpdatesListener extends TelegramUpdatesListener {
      * @param update The update to process. Must not be null.
      */
     private void processUpdate(Update update) {
-        Preconditions.checkNotNull(update, "update must not be null");
+        try {
+            Preconditions.checkNotNull(update, "update must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("TelegramCommandUpdatesListener", null, "update is null");
+            throw ex;
+        }
 
         if (update.message() != null) {
             LOGGER.atFine().log("Processing message update");
@@ -78,10 +94,21 @@ public class TelegramCommandUpdatesListener extends TelegramUpdatesListener {
      * @param update The message update to process. Must not be null, and must contain a message.
      */
     private void processMessageUpdate(Update update) {
-        Preconditions.checkNotNull(update, "update must not be null");
-        Preconditions.checkNotNull(update.message(), "update.message must not be null");
+        try {
+            Preconditions.checkNotNull(update, "update must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("TelegramCommandUpdatesListener", null, "update is null in processMessageUpdate");
+            throw ex;
+        }
+        try {
+            Preconditions.checkNotNull(update.message(), "update.message must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("TelegramCommandUpdatesListener", null, "update.message is null in processMessageUpdate");
+            throw ex;
+        }
 
         com.pengrad.telegrambot.model.Message message = update.message();
+        SecurityAuditLogger.logSuccess("TelegramCommandUpdatesListener", null, "Processing message from chatId: " + message.chat().id());
         LOGGER.atInfo().log("Processing message from chatId: %d", message.chat().id());
         TelegramHandler.getInstances().forEach(handler -> {
             handleCommandDispatch(handler, new MessageDispatchSource(message));
@@ -90,7 +117,13 @@ public class TelegramCommandUpdatesListener extends TelegramUpdatesListener {
                     .forEach(customCommand -> {
                         Message response = createMessageResponse(customCommand);
                         LOGGER.atFine().log("Sending custom command response to chatId: %d", message.chat().id());
-                        response.send(Identificator.of(message.chat().id()));
+                        try {
+                            response.send(Identificator.of(message.chat().id()));
+                            SecurityAuditLogger.logSuccess("TelegramCommandUpdatesListener", null, "Sent custom command response to chatId: " + message.chat().id());
+                        } catch (Exception ex) {
+                            SecurityAuditLogger.logFailure("TelegramCommandUpdatesListener", null, "Failed to send custom command response to chatId: " + message.chat().id() + ", error: " + ex.getMessage());
+                            throw ex;
+                        }
                     });
         });
     }
@@ -103,10 +136,21 @@ public class TelegramCommandUpdatesListener extends TelegramUpdatesListener {
      * @param update The callback query update to process. Must not be null, and must contain a callback query.
      */
     private void processCallbackUpdate(Update update) {
-        Preconditions.checkNotNull(update, "update must not be null");
-        Preconditions.checkNotNull(update.callbackQuery(), "update.callbackQuery must not be null");
+        try {
+            Preconditions.checkNotNull(update, "update must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("TelegramCommandUpdatesListener", null, "update is null in processCallbackUpdate");
+            throw ex;
+        }
+        try {
+            Preconditions.checkNotNull(update.callbackQuery(), "update.callbackQuery must not be null");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("TelegramCommandUpdatesListener", null, "update.callbackQuery is null in processCallbackUpdate");
+            throw ex;
+        }
 
         CallbackQuery callbackQuery = update.callbackQuery();
+        SecurityAuditLogger.logSuccess("TelegramCommandUpdatesListener", null, "Processing callback query from chatId: " + (callbackQuery.message() != null ? callbackQuery.message().chat().id() : -1));
         LOGGER.atInfo().log("Processing callback query from chatId: %d", callbackQuery.message() != null ? callbackQuery.message().chat().id() : -1);
         TelegramHandler.getInstances().forEach(handler -> {
             handleCommandDispatch(handler, new CallbackQueryDispatchSource(callbackQuery));
@@ -122,7 +166,13 @@ public class TelegramCommandUpdatesListener extends TelegramUpdatesListener {
                     .forEach(customCommand -> {
                         Message response = createMessageResponse(customCommand);
                         LOGGER.atFine().log("Sending custom command response to chatId: %d", callbackQuery.message().chat().id());
-                        response.send(Identificator.of(callbackQuery.message().chat().id()));
+                        try {
+                            response.send(Identificator.of(callbackQuery.message().chat().id()));
+                            SecurityAuditLogger.logSuccess("TelegramCommandUpdatesListener", null, "Sent custom command response to chatId: " + callbackQuery.message().chat().id());
+                        } catch (Exception ex) {
+                            SecurityAuditLogger.logFailure("TelegramCommandUpdatesListener", null, "Failed to send custom command response to chatId: " + callbackQuery.message().chat().id() + ", error: " + ex.getMessage());
+                            throw ex;
+                        }
                     });
         });
     }

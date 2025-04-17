@@ -17,6 +17,7 @@ import revxrsal.commands.annotation.Dependency;
 import revxrsal.commands.annotation.Flag;
 import revxrsal.commands.annotation.Named;
 import revxrsal.commands.orphan.OrphanCommand;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,10 +86,16 @@ public class AccountsListCommand implements OrphanCommand {
             }
 
             Keyboard keyboard = createKeyboard(linkType, page, accountsPerPage, type.name(), paginatedAccounts);
-            actorWrapper.send(linkType.newMessageBuilder(linkType.getLinkMessages().getMessage(type.accountsMessage))
-                    .keyboard(keyboard)
-                    .build());
-            LOGGER.atInfo().log("Displayed accounts list for type: %s, page: %d", type, page);
+            try {
+                actorWrapper.send(linkType.newMessageBuilder(linkType.getLinkMessages().getMessage(type.accountsMessage))
+                        .keyboard(keyboard)
+                        .build());
+                LOGGER.atInfo().log("Displayed accounts list for type: %s, page: %d", type, page);
+                SecurityAuditLogger.logSuccess("AccountsListCommand", null, "Displayed accounts list for type: " + type + ", page: " + page);
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("AccountsListCommand", null, "Failed to display accounts list for type: " + type + ", page: " + page + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
     // #endregion

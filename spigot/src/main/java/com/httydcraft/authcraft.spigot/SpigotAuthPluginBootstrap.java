@@ -13,6 +13,7 @@ import com.httydcraft.multimessenger.vk.message.VkMessage;
 import com.httydcraft.multimessenger.vk.provider.VkApiProvider;
 import net.kyori.adventure.platform.AudienceProvider;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,6 +30,11 @@ public class SpigotAuthPluginBootstrap extends JavaPlugin {
     private final AudienceProvider audienceProvider;
     private final ServerCore core;
     private BaseAuthPlugin authPlugin;
+    private CloudflareWarpChecker warpChecker;
+    private SpigotLuckPermsHook luckPermsHook;
+    private SpigotWorldEditHook worldEditHook;
+    private AntiBotManager antiBotManager;
+    private SpigotLimboManager limboManager;
 
     // #endregion
 
@@ -58,10 +64,40 @@ public class SpigotAuthPluginBootstrap extends JavaPlugin {
                 core,
                 new BaseLibraryManagement(new BukkitLibraryManager(this))
         );
+        FileConfiguration config = getConfig();
+        saveDefaultConfig();
+        this.warpChecker = new CloudflareWarpChecker(this, config);
+        this.luckPermsHook = new SpigotLuckPermsHook();
+        if (!luckPermsHook.available()) {
+            LOGGER.atWarning().log("LuckPerms not found! Role/group management disabled.");
+            this.luckPermsHook = null;
+        }
+        this.worldEditHook = new SpigotWorldEditHook();
+        if (!worldEditHook.available()) {
+            LOGGER.atWarning().log("WorldEdit not found! Region protection disabled.");
+            this.worldEditHook = null;
+        }
+        this.antiBotManager = new AntiBotManager();
+        // LimboManager init (10x10x10 регион, точка 0,80,0)
+        com.sk89q.worldedit.regions.CuboidRegion region = new com.sk89q.worldedit.regions.CuboidRegion(
+                Bukkit.getWorlds().get(0),
+                new com.sk89q.worldedit.math.BlockVector3(-5, 75, -5),
+                new com.sk89q.worldedit.math.BlockVector3(5, 85, 5)
+        );
+        org.bukkit.Location spawn = new org.bukkit.Location(Bukkit.getWorlds().get(0), 0, 80, 0);
+        limboManager = new SpigotLimboManager(this, spawn, worldEditHook, region);
+        // Регистрируем как сервис Bukkit
+        getServer().getServicesManager().register(SpigotLimboManager.class, limboManager, this, org.bukkit.plugin.ServicePriority.Normal);
         initializeListener();
         initializeCommand();
         if (authPlugin.getConfig().getVKSettings().isEnabled()) {
             initializeVk();
+        }
+        if (authPlugin.getConfig().getTelegramSettings().isEnabled()) {
+            initializeTelegram();
+        }
+        if (authPlugin.getConfig().getDiscordSettings().isEnabled()) {
+            initializeDiscord();
         }
     }
     // #endregion
@@ -94,6 +130,36 @@ public class SpigotAuthPluginBootstrap extends JavaPlugin {
     }
 
     /**
+     * Initializes Telegram integration if enabled.
+     */
+    private void initializeTelegram() {
+        LOGGER.atInfo().log("Initializing Telegram integration");
+        authPlugin.putHook(com.httydcraft.authcraft.core.hooks.TelegramPluginHook.class,
+                new com.httydcraft.authcraft.spigot.hooks.SpigotTelegramPluginHook());
+        // Регистрация TelegramUpdatesListener
+        com.pengrad.telegrambot.TelegramBot bot = ((com.httydcraft.authcraft.spigot.hooks.SpigotTelegramPluginHook)
+                authPlugin.getHook(com.httydcraft.authcraft.core.hooks.TelegramPluginHook.class)).getTelegramBot();
+        bot.setUpdatesListener(new com.httydcraft.authcraft.spigot.listener.TelegramUpdatesListenerImpl());
+        // Регистрация команд
+        new com.httydcraft.authcraft.spigot.commands.TelegramCommandRegistry();
+    }
+
+    /**
+     * Initializes Discord integration if enabled.
+     */
+    private void initializeDiscord() {
+        LOGGER.atInfo().log("Initializing Discord integration");
+        com.httydcraft.authcraft.spigot.hooks.SpigotDiscordHook discordHook = new com.httydcraft.authcraft.spigot.hooks.SpigotDiscordHook();
+        authPlugin.putHook(com.httydcraft.authcraft.core.hooks.DiscordHook.class, discordHook);
+        // Регистрация DiscordListener
+        if (discordHook.getJDA() != null) {
+            discordHook.getJDA().addEventListener(new com.httydcraft.authcraft.spigot.listener.DiscordListener());
+        }
+        // Регистрация команд
+        new com.httydcraft.authcraft.spigot.commands.DiscordCommandRegistry();
+    }
+
+    /**
      * Initializes listeners for authentication events.
      */
     private void initializeListener() {
@@ -118,6 +184,51 @@ public class SpigotAuthPluginBootstrap extends JavaPlugin {
      */
     public AuthPlugin getAuthPlugin() {
         return authPlugin;
+    }
+
+    /**
+     * Gets the CloudflareWarpChecker instance.
+     *
+     * @return The {@link CloudflareWarpChecker}.
+     */
+    public CloudflareWarpChecker getWarpChecker() {
+        return warpChecker;
+    }
+
+    /**
+     * Gets the LuckPerms hook instance.
+     *
+     * @return The {@link SpigotLuckPermsHook}.
+     */
+    public SpigotLuckPermsHook getLuckPermsHook() {
+        return luckPermsHook;
+    }
+
+    /**
+     * Gets the WorldEdit hook instance.
+     *
+     * @return The {@link SpigotWorldEditHook}.
+     */
+    public SpigotWorldEditHook getWorldEditHook() {
+        return worldEditHook;
+    }
+
+    /**
+     * Gets the AntiBotManager instance.
+     *
+     * @return The {@link AntiBotManager}.
+     */
+    public AntiBotManager getAntiBotManager() {
+        return antiBotManager;
+    }
+
+    /**
+     * Gets the LimboManager instance.
+     *
+     * @return The {@link SpigotLimboManager}.
+     */
+    public SpigotLimboManager getLimboManager() {
+        return limboManager;
     }
     // #endregion
 }

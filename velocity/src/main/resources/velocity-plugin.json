@@ -5,6 +5,7 @@
   "authors": [
     "BezzubickMCPlay"
   ],
+  "description": "Полноценная система авторизации AuthCraft для Minecraft Velocity с поддержкой VK, Telegram, Discord и Limbo.",
   "dependencies": [
     {
       "id": "vk-api",
@@ -15,9 +16,13 @@
       "optional": true
     },
     {
+      "id": "jda",
+      "optional": true
+    },
+    {
       "id": "nanolimbovelocity",
       "optional": true
     }
   ],
-  "main": "me.mastercapexd.auth.velocity.VelocityAuthPluginBootstrap"
+  "main": "com.httydcraft.authcraft.velocity.VelocityAuthPluginBootstrap"
 }

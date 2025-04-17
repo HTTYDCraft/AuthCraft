@@ -4,6 +4,7 @@ import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.api.step.AuthenticationStepContext;
 import com.httydcraft.authcraft.core.step.AuthenticationStepTemplate;
 import com.httydcraft.authcraft.core.step.creators.AuthenticationStepFactoryTemplate;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -33,6 +34,7 @@ public class NullAuthenticationStep extends AuthenticationStepTemplate {
      */
     @Override
     public boolean shouldPassToNextStep() {
+        SecurityAuditLogger.logSuccess("NullAuthenticationStep", null, "shouldPassToNextStep called");
         LOGGER.atFine().log("Checked shouldPassToNextStep: true");
         return true;
     }
@@ -44,6 +46,7 @@ public class NullAuthenticationStep extends AuthenticationStepTemplate {
      */
     @Override
     public boolean shouldSkip() {
+        SecurityAuditLogger.logSuccess("NullAuthenticationStep", null, "shouldSkip called");
         LOGGER.atFine().log("Checked shouldSkip: true");
         return true;
     }

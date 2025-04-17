@@ -19,6 +19,7 @@ import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
 import revxrsal.commands.annotation.Optional;
 import revxrsal.commands.orphan.OrphanCommand;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -77,9 +78,15 @@ public class DiscordLinkCommand extends MessengerLinkCommandTemplate implements 
 
             LinkConfirmationType linkConfirmationType = getLinkConfirmationType(commandActor);
             long timeoutTimestamp = System.currentTimeMillis() + config.getDiscordSettings().getConfirmationSettings().getRemoveDelay().getMillis();
-            sendLinkConfirmation(commandActor, linkConfirmationType.bindLinkConfirmationUser(
-                    new BaseLinkConfirmationUser(linkConfirmationType, timeoutTimestamp, DiscordLinkType.getInstance(), account, code), linkUserIdentificator));
-            LOGGER.atInfo().log("Sent link confirmation for accountId: %s", accountId);
+            try {
+                sendLinkConfirmation(commandActor, linkConfirmationType.bindLinkConfirmationUser(
+                        new BaseLinkConfirmationUser(linkConfirmationType, timeoutTimestamp, DiscordLinkType.getInstance(), account, code), linkUserIdentificator));
+                LOGGER.atInfo().log("Sent link confirmation for accountId: %s", accountId);
+                SecurityAuditLogger.logSuccess("DiscordLinkCommand", null, "Sent link confirmation for accountId: " + accountId);
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("DiscordLinkCommand", null, "Failed to send link confirmation for accountId: " + accountId + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
     // #endregion

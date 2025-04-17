@@ -17,6 +17,7 @@ import com.httydcraft.authcraft.api.server.message.ServerComponent;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.api.server.scheduler.ServerScheduler;
 import com.httydcraft.authcraft.api.server.title.ServerTitle;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;

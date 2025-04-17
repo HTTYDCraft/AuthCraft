@@ -24,6 +24,7 @@ import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
 import revxrsal.commands.annotation.Optional;
 import revxrsal.commands.orphan.OrphanCommand;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -87,9 +88,15 @@ public class VKLinkCommand extends MessengerLinkCommandTemplate implements Orpha
 
             LinkConfirmationType linkConfirmationType = getLinkConfirmationType(commandActor);
             long timeoutTimestamp = System.currentTimeMillis() + VKLinkType.getInstance().getSettings().getConfirmationSettings().getRemoveDelay().getMillis();
-            sendLinkConfirmation(commandActor, linkConfirmationType.bindLinkConfirmationUser(
-                    new BaseLinkConfirmationUser(linkConfirmationType, timeoutTimestamp, VKLinkType.getInstance(), account, code), linkUserIdentificator));
-            LOGGER.atInfo().log("Sent link confirmation for accountId: %s", accountId);
+            try {
+                sendLinkConfirmation(commandActor, linkConfirmationType.bindLinkConfirmationUser(
+                        new BaseLinkConfirmationUser(linkConfirmationType, timeoutTimestamp, VKLinkType.getInstance(), account, code), linkUserIdentificator));
+                LOGGER.atInfo().log("Sent link confirmation for accountId: %s", accountId);
+                SecurityAuditLogger.logSuccess("VKLinkCommand", null, "Sent link confirmation for accountId: " + accountId);
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("VKLinkCommand", null, "Failed to send link confirmation for accountId: " + accountId + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
     // #endregion

@@ -10,7 +10,7 @@ import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.api.server.proxy.ProxyServer;
 import com.httydcraft.authcraft.velocity.server.VelocityProxyServer;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitywired.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.ServerConnection;
 import net.kyori.adventure.text.Component;
 
 import java.net.InetAddress;
@@ -148,7 +148,7 @@ public class VelocityServerPlayer implements ServerPlayer {
     public Optional<ProxyServer> getCurrentServer() {
         Optional<ProxyServer> result = player.getCurrentServer()
                 .map(ServerConnection::getServer)
-                .map(VelocityProxyServer::new);
+                .map((java.util.function.Function<? super com.velocitypowered.api.proxy.server.RegisteredServer, ? extends ProxyServer>) VelocityProxyServer::new);
         LOGGER.atFine().log("Retrieved current server: %s", result.map(ProxyServer::getServerName).orElse("none"));
         return result;
     }

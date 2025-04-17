@@ -9,10 +9,11 @@ import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.api.server.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
-import com.velocitywired.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 
 import java.util.List;
+import java.util.Optional;
 
 // #region Class Documentation
 /**

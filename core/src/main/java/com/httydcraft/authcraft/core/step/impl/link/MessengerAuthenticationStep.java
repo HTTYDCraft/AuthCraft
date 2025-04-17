@@ -18,6 +18,7 @@ import com.httydcraft.multimessenger.core.keyboard.Keyboard;
 import com.httydcraft.authcraft.core.config.message.server.ServerMessageContext;
 import com.httydcraft.authcraft.core.link.user.entry.BaseLinkEntryUser;
 import com.httydcraft.authcraft.core.step.AuthenticationStepTemplate;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 import java.util.function.Predicate;
 
@@ -50,6 +51,7 @@ public class MessengerAuthenticationStep extends AuthenticationStepTemplate impl
         Account account = authenticationStepContext.getAccount();
         this.linkEntryUser = new BaseLinkEntryUser(linkType, account, account.findFirstLinkUserOrNew(filter, linkType).getLinkUserInfo());
         LOGGER.atFine().log("Initialized MessengerAuthenticationStep for account: %s, step: %s", account.getPlayerId(), stepName);
+        SecurityAuditLogger.logSuccess("MessengerAuthenticationStep: step factory event", null, "MessengerAuthenticationStep event triggered");
     }
     // #endregion
 
@@ -78,16 +80,19 @@ public class MessengerAuthenticationStep extends AuthenticationStepTemplate impl
         LOGGER.atFine().log("Checking shouldSkip for account: %s, linkType: %s", account.getPlayerId(), linkType.getClass().getSimpleName());
 
         if (!linkType.getSettings().isEnabled()) {
+            SecurityAuditLogger.logFailure("MessengerAuthenticationStep", account.getPlayer().orElse(null), "Link type disabled, skipping messenger step");
             LOGGER.atFine().log("Link type disabled, skipping");
             return true;
         }
 
         if (PLUGIN.getLinkEntryBucket().find(account.getPlayerId(), linkType).isPresent()) {
+            SecurityAuditLogger.logSuccess("MessengerAuthenticationStep", account.getPlayer().orElse(null), "Link entry found, skipping messenger step");
             LOGGER.atFine().log("Link entry found, skipping");
             return true;
         }
 
         if (account.isSessionActive(PLUGIN.getConfig().getSessionDurability())) {
+            SecurityAuditLogger.logSuccess("MessengerAuthenticationStep", account.getPlayer().orElse(null), "Active session found, skipping messenger step");
             LOGGER.atFine().log("Active session found, skipping");
             return true;
         }
@@ -95,6 +100,7 @@ public class MessengerAuthenticationStep extends AuthenticationStepTemplate impl
         LinkUser linkUser = account.findFirstLinkUser(user -> user.getLinkType().equals(linkType)).orElse(null);
 
         if (linkUser == null) {
+            SecurityAuditLogger.logFailure("MessengerAuthenticationStep", account.getPlayer().orElse(null), "No link user found, skipping messenger step");
             linkEntryUser.getAccount().getPlayer().ifPresent(player ->
                     player.sendMessage(linkType.getServerMessages().getMessage("not-linked")));
             LOGGER.atFine().log("No link user found, skipping");
@@ -104,6 +110,7 @@ public class MessengerAuthenticationStep extends AuthenticationStepTemplate impl
         LinkUserInfo linkUserInfo = linkUser.getLinkUserInfo();
 
         if (linkUser.isIdentifierDefaultOrNull()) {
+            SecurityAuditLogger.logFailure("MessengerAuthenticationStep", account.getPlayer().orElse(null), "No valid link user identifier, skipping messenger step");
             linkEntryUser.getAccount().getPlayer().ifPresent(player ->
                     player.sendMessage(linkType.getServerMessages().getMessage("not-linked")));
             LOGGER.atFine().log("No valid link user identifier, skipping");
@@ -111,6 +118,7 @@ public class MessengerAuthenticationStep extends AuthenticationStepTemplate impl
         }
 
         if (linkType.getSettings().getConfirmationSettings().canToggleConfirmation() && !linkUserInfo.isConfirmationEnabled()) {
+            SecurityAuditLogger.logFailure("MessengerAuthenticationStep", account.getPlayer().orElse(null), "Confirmation not enabled, skipping messenger step");
             LOGGER.atFine().log("Confirmation not enabled, skipping");
             return true;
         }
@@ -135,15 +143,20 @@ public class MessengerAuthenticationStep extends AuthenticationStepTemplate impl
         Preconditions.checkNotNull(linkType, "linkType must not be null");
         Preconditions.checkNotNull(linkUserInfo, "linkUserInfo must not be null");
         LOGGER.atFine().log("Sending confirmation message for account: %s, linkType: %s", account.getPlayerId(), linkType.getClass().getSimpleName());
-
-        Keyboard keyboard = linkType.getSettings().getKeyboards().createKeyboard("confirmation", "%name%", account.getName());
-        Identificator userIdentificator = linkUserInfo.getIdentificator().isNumber() ? Identificator.of(linkUserInfo.getIdentificator().asNumber()) :
-                Identificator.of(linkUserInfo.getIdentificator().asString());
-        linkType.newMessageBuilder(linkType.getSettings().getMessages().getMessage("enter-message", linkType.newMessageContext(account)))
-                .keyboard(keyboard)
-                .build()
-                .send(userIdentificator);
-        LOGGER.atFine().log("Sent confirmation message for account: %s", account.getPlayerId());
+        try {
+            Keyboard keyboard = linkType.getSettings().getKeyboards().createKeyboard("confirmation", "%name%", account.getName());
+            Identificator userIdentificator = linkUserInfo.getIdentificator().isNumber() ? Identificator.of(linkUserInfo.getIdentificator().asNumber()) :
+                    Identificator.of(linkUserInfo.getIdentificator().asString());
+            linkType.newMessageBuilder(linkType.getSettings().getMessages().getMessage("enter-message", linkType.newMessageContext(account)))
+                    .keyboard(keyboard)
+                    .build()
+                    .send(userIdentificator);
+            LOGGER.atFine().log("Sent confirmation message for account: %s", account.getPlayerId());
+            SecurityAuditLogger.logSuccess("MessengerAuthenticationStep", account.getPlayer().orElse(null), "Confirmation message sent via messenger");
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("MessengerAuthenticationStep", account.getPlayer().orElse(null), "Failed to send confirmation message: " + ex.getMessage());
+            LOGGER.atWarning().log("Failed to send confirmation message for account: %s, error: %s", account.getPlayerId(), ex.getMessage());
+        }
     }
 
     /**
@@ -154,13 +167,26 @@ public class MessengerAuthenticationStep extends AuthenticationStepTemplate impl
     @Override
     public void process(ServerPlayer player) {
         Preconditions.checkNotNull(player, "player must not be null");
-        Messages<ServerComponent> messages = linkEntryUser.getLinkType().getServerMessages();
-        player.sendMessage(messages.getMessage("enter-confirm-need-chat", new ServerMessageContext(linkEntryUser.getAccount())));
-        PLUGIN.getCore()
-                .createTitle(messages.getMessage("enter-confirm-need-title"))
-                .subtitle(messages.getMessage("enter-confirm-need-subtitle"))
-                .stay(120)
-                .send(player);
+        Account account = authenticationStepContext.getAccount();
+        SecurityAuditLogger.logSuccess("MessengerAuthenticationStep", player, String.format("Step started for player: %s, account: %s", player.getName(), account != null ? account.getPlayerId() : "null"));
+        if (account == null) {
+            SecurityAuditLogger.logFailure("MessengerAuthenticationStep", player, "Account is null on messenger step");
+            player.sendMessage(PLUGIN.getConfig().getServerMessages().getMessage("account-not-found"));
+            return;
+        }
+        try {
+            Messages<ServerComponent> messages = linkEntryUser.getLinkType().getServerMessages();
+            player.sendMessage(messages.getMessage("enter-confirm-need-chat", new ServerMessageContext(linkEntryUser.getAccount())));
+            PLUGIN.getCore()
+                    .createTitle(messages.getMessage("enter-confirm-need-title"))
+                    .subtitle(messages.getMessage("enter-confirm-need-subtitle"))
+                    .stay(120)
+                    .send(player);
+            SecurityAuditLogger.logSuccess("MessengerAuthenticationStep", player, "Messenger confirmation prompt sent to player: " + player.getName());
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("MessengerAuthenticationStep", player, "MessengerAuthenticationStep failed for player: " + (player != null ? player.getName() : "null") + ", error: " + ex.getMessage());
+            throw ex;
+        }
         LOGGER.atFine().log("Processed messenger step for player: %s", player.getNickname());
     }
     // #endregion

@@ -2,6 +2,7 @@ package com.httydcraft.authcraft.core.hooks.nanolimbo;
 
 import com.google.common.base.Preconditions;
 import com.google.common.flogger.GoogleLogger;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import ua.nanit.limbo.configuration.LimboConfig;
 import ua.nanit.limbo.server.data.BossBar;
 import ua.nanit.limbo.server.data.InfoForwarding;
@@ -16,11 +17,13 @@ import java.time.Duration;
  * Configuration for NanoLimbo server.
  * Implements {@link LimboConfig} to provide settings for the limbo server.
  */
+@ConfigSerializable
 public class NanoLimboConfig implements LimboConfig {
     private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
     private final PingData pingData;
     private final SocketAddress address;
     private final InfoForwarding forwarding;
+
     // #endregion
 
     // #region Constructor
@@ -304,5 +307,15 @@ public class NanoLimboConfig implements LimboConfig {
         LOGGER.atFine().log("Retrieved workerGroupSize: 4");
         return 4; // Default value
     }
-    // #endregion
+
+    @Override
+    public double getInterval() {
+        return 0;
+    }
+
+    @Override
+    public double getMaxPacketRate() {
+        return 0;
+    }
+
 }

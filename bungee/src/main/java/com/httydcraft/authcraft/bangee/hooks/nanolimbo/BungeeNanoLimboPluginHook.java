@@ -8,6 +8,7 @@ import com.httydcraft.authcraft.api.config.PluginConfig;
 import com.httydcraft.authcraft.api.hook.LimboPluginHook;
 import com.httydcraft.authcraft.bangee.server.BungeeServer;
 import com.httydcraft.authcraft.core.hooks.nanolimbo.NanoLimboProvider;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ServerConnectEvent;
@@ -101,6 +102,7 @@ public class BungeeNanoLimboPluginHook implements LimboPluginHook, Listener {
         ServerInfo authServer = config.findServerInfo(config.getAuthServers())
                 .asProxyServer().as(BungeeServer.class).getServerInfo();
         LOGGER.atFine().log("Redirecting player %s to auth server: %s", event.getPlayer().getName(), authServer.getName());
+        SecurityAuditLogger.logSuccess("NanoLimboServerChoose", null, "Redirected player " + event.getPlayer().getName() + " to auth server: " + authServer.getName());
         event.setTarget(authServer);
     }
     // #endregion

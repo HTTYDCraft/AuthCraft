@@ -12,6 +12,7 @@ import com.httydcraft.authcraft.core.server.commands.impl.RegisterCommandImpleme
 import com.httydcraft.authcraft.core.server.commands.parameters.RegisterPassword;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.core.step.impl.RegisterAuthenticationStep;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import revxrsal.commands.annotation.Command;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
@@ -44,13 +45,23 @@ public class RegisterCommand {
     @DefaultFor({"reg", "register"})
     public void register(ServerPlayer player, @AuthenticationAccount Account account, RegisterPassword password) {
         Preconditions.checkNotNull(player, "player must not be null");
-        Preconditions.checkNotNull(account, "account must not be null");
         Preconditions.checkNotNull(password, "password must not be null");
-        LOGGER.atFine().log("Executing register for player: %s", player.getNickname());
+        SecurityAuditLogger.logSuccess("RegisterCommand", player, String.format("Register command started for player: %s", player.getName()));
+
+        if (account == null) {
+            SecurityAuditLogger.logFailure("RegisterCommand", player, "Account not found for registration");
+            player.sendMessage(config.getServerMessages().getMessage("account-not-found"));
+            return;
+        }
 
         RegisterCommandImplementation impl = new RegisterCommandImplementation(plugin);
-        impl.performRegister(player, account, password);
-        LOGGER.atFine().log("Delegated registration to implementation for account: %s", account.getPlayerId());
+        try {
+            impl.performRegister(player, account, password);
+            SecurityAuditLogger.logSuccess("RegisterCommand", player, "Registration completed for account: " + account.getPlayerId());
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("RegisterCommand", player, "Registration failed for account: " + account.getPlayerId() + ", error: " + ex.getMessage());
+            throw ex;
+        }
     }
     // #endregion
 }

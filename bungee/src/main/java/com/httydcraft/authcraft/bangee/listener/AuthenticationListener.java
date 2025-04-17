@@ -10,6 +10,8 @@ import com.httydcraft.authcraft.bangee.player.BungeeConnectionProxyPlayer;
 import com.httydcraft.authcraft.bangee.player.BungeeServerPlayer;
 import com.httydcraft.authcraft.bangee.server.BungeeServer;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
@@ -65,11 +67,13 @@ public class AuthenticationListener implements Listener {
         plugin.getLoginManagement().onLogin(connectionPlayer).whenComplete((account, exception) -> {
             if (exception != null) {
                 LOGGER.atWarning().withCause(exception).log("Login failed for player: %s", connectionPlayer.getNickname());
+                SecurityAuditLogger.logFailure("LoginEvent", connectionPlayer, "Login failed: " + exception.getMessage());
                 INVALID_ACCOUNTS.add(event.getConnection().getUniqueId());
             }
             event.completeIntent(bungeePlugin);
             if (account == null) {
                 LOGGER.atFine().log("No account for player: %s", connectionPlayer.getNickname());
+                SecurityAuditLogger.logFailure("LoginEvent", connectionPlayer, "No account found");
                 return;
             }
             plugin.getCore().schedule(() -> {
@@ -82,6 +86,7 @@ public class AuthenticationListener implements Listener {
                         player.sendMessage(plugin.getConfig().getServerMessages().getMessage(
                                 "autoconnect", new ServerMessageContext(account))));
                 LOGGER.atFine().log("Sent autoconnect message to player: %s", connectionPlayer.getNickname());
+                SecurityAuditLogger.logSuccess("LoginEvent", connectionPlayer, "Login successful");
             }, 1, TimeUnit.SECONDS);
         });
     }
@@ -102,6 +107,7 @@ public class AuthenticationListener implements Listener {
         plugin.getCore().wrapPlayer(event.getPlayer()).ifPresent(player -> {
             plugin.getLoginManagement().onDisconnect(player);
             LOGGER.atFine().log("Handled disconnect for player: %s", player.getNickname());
+            SecurityAuditLogger.logSuccess("DisconnectEvent", player, "Player disconnected");
         });
     }
 
@@ -125,18 +131,21 @@ public class AuthenticationListener implements Listener {
         ServerPlayer player = playerOptional.get();
         if (!plugin.getAuthenticatingAccountBucket().isAuthenticating(player)) {
             LOGGER.atFine().log("Player %s not authenticating, allowing chat", player.getNickname());
+            SecurityAuditLogger.logSuccess("ChatEvent", player, "Chat allowed (not authenticating)");
             return;
         }
         if (plugin.getConfig().isPasswordInChatEnabled() && !event.isCommand()) {
             LOGGER.atFine().log("Processing chat as password for player: %s", player.getNickname());
             plugin.getEventBus().publish(PlayerChatPasswordEvent.class, player, event.getMessage());
             event.setCancelled(true);
+            SecurityAuditLogger.logSuccess("ChatEvent", player, "Password entered via chat");
             return;
         }
         if (plugin.getConfig().shouldBlockChat() && !event.isCommand()) {
             LOGGER.atFine().log("Blocking chat for player: %s", player.getNickname());
             player.sendMessage(plugin.getConfig().getServerMessages().getMessage("disabled-chat"));
             event.setCancelled(true);
+            SecurityAuditLogger.logFailure("ChatEvent", player, "Chat blocked");
             return;
         }
         if (event.isCommand() &&
@@ -144,6 +153,7 @@ public class AuthenticationListener implements Listener {
             LOGGER.atFine().log("Blocking command %s for player: %s", event.getMessage(), player.getNickname());
             player.sendMessage(plugin.getConfig().getServerMessages().getMessage("disabled-command"));
             event.setCancelled(true);
+            SecurityAuditLogger.logFailure("CommandEvent", player, "Command blocked: " + event.getMessage());
         }
     }
 
@@ -158,6 +168,7 @@ public class AuthenticationListener implements Listener {
         ServerPlayer player = new BungeeServerPlayer(event.getPlayer());
         if (!plugin.getAuthenticatingAccountBucket().isAuthenticating(player)) {
             LOGGER.atFine().log("Player %s not authenticating, allowing server connect", player.getNickname());
+            SecurityAuditLogger.logSuccess("ServerConnectEvent", player, "Server connect allowed (not authenticating)");
             return;
         }
         String targetServer = event.getTarget().getName();
@@ -166,11 +177,13 @@ public class AuthenticationListener implements Listener {
                     .asProxyServer().as(BungeeServer.class).getServerInfo();
             LOGGER.atFine().log("Redirecting player %s to auth server: %s", player.getNickname(), authServer.getName());
             event.setTarget(authServer);
+            SecurityAuditLogger.logFailure("ServerConnectEvent", player, "Redirected to auth server: " + authServer.getName());
             return;
         }
         LOGGER.atFine().log("Blocking server %s for player: %s", targetServer, player.getNickname());
         player.sendMessage(plugin.getConfig().getServerMessages().getMessage("disabled-server"));
         event.setCancelled(true);
+        SecurityAuditLogger.logFailure("ServerConnectEvent", player, "Server connect blocked: " + targetServer);
     }
     // #endregion
 }

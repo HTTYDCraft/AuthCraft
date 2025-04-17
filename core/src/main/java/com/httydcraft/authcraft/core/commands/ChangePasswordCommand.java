@@ -13,6 +13,7 @@ import com.httydcraft.authcraft.core.commands.annotation.ConfigurationArgumentEr
 import com.httydcraft.authcraft.core.link.LinkCommandActorWrapper;
 import com.httydcraft.authcraft.api.link.LinkType;
 import com.httydcraft.authcraft.core.server.commands.parameters.NewPassword;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
 import revxrsal.commands.orphan.OrphanCommand;
@@ -57,12 +58,18 @@ public class ChangePasswordCommand implements OrphanCommand {
                 LOGGER.atFine().log("Password change cancelled for account: %s", account.getName());
                 return;
             }
-            account.setPasswordHash(account.getCryptoProvider().hash(HashInput.of(newPassword.getNewPassword())));
-            accountStorage.saveOrUpdateAccount(account);
-            actorWrapper.reply(linkType.getLinkMessages()
-                    .getStringMessage("changepass-success", linkType.newMessageContext(account))
-                    .replaceAll("(?i)%password%", newPassword.getNewPassword()));
-            LOGGER.atInfo().log("Password changed for account: %s", account.getName());
+            try {
+                account.setPasswordHash(account.getCryptoProvider().hash(HashInput.of(newPassword.getNewPassword())));
+                accountStorage.saveOrUpdateAccount(account);
+                actorWrapper.reply(linkType.getLinkMessages()
+                        .getStringMessage("changepass-success", linkType.newMessageContext(account))
+                        .replaceAll("(?i)%password%", newPassword.getNewPassword()));
+                LOGGER.atInfo().log("Password changed for account: %s", account.getName());
+                SecurityAuditLogger.logSuccess("ChangePasswordCommand", account.getPlayer().orElse(null), "Password changed for account: " + account.getName());
+            } catch (Exception ex) {
+                SecurityAuditLogger.logFailure("ChangePasswordCommand", null, "Failed to change password for account: " + (account != null ? account.getName() : "null") + ", error: " + ex.getMessage());
+                throw ex;
+            }
         });
     }
     // #endregion

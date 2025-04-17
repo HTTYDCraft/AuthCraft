@@ -48,6 +48,7 @@ public class VKExceptionHandler extends MessengerExceptionHandler {
             return;
         }
 
+        SecurityAuditLogger.logFailure("VKExceptionHandler", null, "Unhandled exception for actor: " + actor.getName() + ", error: " + throwable.getMessage());
         LOGGER.atWarning().withCause(throwable).log("Unhandled exception occurred for actor: %s", actor);
         super.onUnhandledException(actor, throwable);
     }

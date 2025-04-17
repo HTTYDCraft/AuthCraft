@@ -175,7 +175,7 @@ public abstract class MessagesTemplate<T> implements Messages<T>, ConfigurationH
      * @param message The message to format.
      * @return The formatted message.
      */
-    protected String formatString(String message) {
+    public String formatString(String message) {
         return message;
     }
     // #endregion

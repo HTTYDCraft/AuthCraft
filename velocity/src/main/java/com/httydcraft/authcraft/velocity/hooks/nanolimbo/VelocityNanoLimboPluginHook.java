@@ -14,6 +14,9 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 
 import java.net.InetSocketAddress;
+import java.util.stream.IntStream;
+
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -91,6 +94,12 @@ public class VelocityNanoLimboPluginHook implements LimboPluginHook {
      */
     @Subscribe
     public void onServerChoose(PlayerChooseInitialServerEvent event) {
+        SecurityAuditLogger.logSuccess("VelocityNanoLimboPluginHook: limbo event", null, "NanoLimbo event triggered");
+        if (event == null) {
+            SecurityAuditLogger.logFailure("VelocityNanoLimboPluginHook", null, "Event is null on NanoLimbo event");
+            LOGGER.atSevere().log("Event is null on NanoLimbo event");
+            return;
+        }
         Preconditions.checkNotNull(event, "event must not be null");
         PluginConfig config = AuthPlugin.instance().getConfig();
         LOGGER.atFine().log("Handling server choose event for player");

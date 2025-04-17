@@ -1,7 +1,6 @@
 package com.httydcraft.authcraft.core.server.commands;
 
 import com.google.common.base.Preconditions;
-import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.api.AuthPlugin;
 import com.httydcraft.authcraft.api.bucket.AuthenticatingAccountBucket;
 import com.httydcraft.authcraft.api.config.PluginConfig;
@@ -12,6 +11,7 @@ import io.github.revxrsal.eventbus.EventBus;
 import revxrsal.commands.annotation.Command;
 import revxrsal.commands.annotation.DefaultFor;
 import revxrsal.commands.annotation.Dependency;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -20,7 +20,6 @@ import revxrsal.commands.annotation.Dependency;
  */
 @Command("logout")
 public class LogoutCommand {
-    private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
     @Dependency
     private AuthenticatingAccountBucket authenticatingAccountBucket;
     @Dependency
@@ -29,6 +28,7 @@ public class LogoutCommand {
     private PluginConfig config;
     @Dependency
     private AccountDatabase accountStorage;
+
     // #endregion
 
     // #region Command Logic
@@ -40,22 +40,27 @@ public class LogoutCommand {
     @DefaultFor("logout")
     public void logout(ServerPlayer player) {
         Preconditions.checkNotNull(player, "player must not be null");
-        LOGGER.atFine().log("Executing logout for player: %s", player.getNickname());
+        SecurityAuditLogger.logSuccess("Logout command executed", player, "Attempting logout");
 
         String id = config.getActiveIdentifierType().getId(player);
         if (authenticatingAccountBucket.isAuthenticating(player)) {
             player.sendMessage(config.getServerMessages().getMessage("already-logged-out"));
-            LOGGER.atFine().log("Player %s already in authentication", player.getNickname());
+            SecurityAuditLogger.logFailure("Logout", player, "Already in authentication (already logged out)");
             return;
         }
 
         eventBus.publish(PlayerLogoutEvent.class, player, false).thenAccept(result -> {
             if (result.getEvent().isCancelled()) {
-                LOGGER.atFine().log("Logout cancelled for player: %s", player.getNickname());
+                SecurityAuditLogger.logFailure("Logout", player, "Logout cancelled by event");
                 return;
             }
 
             accountStorage.getAccount(id).thenAccept(account -> {
+                if (account == null || !account.isRegistered()) {
+                    player.sendMessage(config.getServerMessages().getMessage("account-not-found"));
+                    SecurityAuditLogger.logFailure("Logout", player, "Account not found or not registered");
+                    return;
+                }
                 account.logout(config.getSessionDurability());
                 accountStorage.saveOrUpdateAccount(account);
                 authenticatingAccountBucket.addAuthenticatingAccount(account);
@@ -63,7 +68,7 @@ public class LogoutCommand {
                         AuthPlugin.instance().getAuthenticationContextFactoryBucket().createContext(account));
                 player.sendMessage(config.getServerMessages().getMessage("logout-success"));
                 config.findServerInfo(config.getAuthServers()).asProxyServer().sendPlayer(player);
-                LOGGER.atInfo().log("Logged out player: %s", player.getNickname());
+                SecurityAuditLogger.logSuccess("Logout", player, "Logout successful");
             });
         });
     }

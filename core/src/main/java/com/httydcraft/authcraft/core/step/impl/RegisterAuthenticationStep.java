@@ -12,6 +12,7 @@ import com.httydcraft.authcraft.api.step.MessageableAuthenticationStep;
 import com.httydcraft.authcraft.core.config.message.server.ServerMessageContext;
 import com.httydcraft.authcraft.core.step.AuthenticationStepTemplate;
 import com.httydcraft.authcraft.core.step.creators.AuthenticationStepFactoryTemplate;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -32,8 +33,8 @@ public class RegisterAuthenticationStep extends AuthenticationStepTemplate imple
      */
     public RegisterAuthenticationStep(AuthenticationStepContext context) {
         super(STEP_NAME, context);
-        Preconditions.checkNotNull(context, "context must not be null");
-        LOGGER.atFine().log("Initialized RegisterAuthenticationStep for account: %s", context.getAccount().getPlayerId());
+        LOGGER.atFine().log("Initialized AuthCraft RegisterAuthenticationStep for account: %s", context.getAccount().getPlayerId());
+        LOGGER.atFine().log("AuthCraft RegisterAuthenticationStep initialized");
     }
     // #endregion
 
@@ -52,7 +53,7 @@ public class RegisterAuthenticationStep extends AuthenticationStepTemplate imple
             PLUGIN.getAuthenticatingAccountBucket().removeAuthenticatingAccount(account);
             account.setLastSessionStartTimestamp(System.currentTimeMillis());
             account.getPlayer().map(ServerPlayer::getPlayerIp).ifPresent(account::setLastIpAddress);
-            LOGGER.atFine().log("Account %s registered, updated session details", account.getPlayerId());
+            LOGGER.atFine().log("AuthCraft account %s registered, updated session details", account.getPlayerId());
         }
         return isRegistered;
     }
@@ -80,6 +81,13 @@ public class RegisterAuthenticationStep extends AuthenticationStepTemplate imple
     public void process(ServerPlayer player) {
         Preconditions.checkNotNull(player, "player must not be null");
         Account account = authenticationStepContext.getAccount();
+        if (account == null) {
+            SecurityAuditLogger.logFailure("RegisterAuthenticationStep", player, "Account is null");
+            LOGGER.atWarning().log("Auth fail: register step for player %s, reason: account is null in RegisterAuthenticationStep", player.getNickname());
+            player.sendMessage(PLUGIN.getConfig().getServerMessages().getMessage("account-not-found"));
+            return;
+        }
+        SecurityAuditLogger.logSuccess("RegisterAuthenticationStep", player, String.format("Step started for player: %s, account: %s", player.getName(), account.getPlayerId()));
         PluginConfig config = AuthPlugin.instance().getConfig();
         player.sendMessage(config.getServerMessages().getMessage("register-chat", new ServerMessageContext(account)));
         AuthPlugin.instance()
@@ -88,7 +96,7 @@ public class RegisterAuthenticationStep extends AuthenticationStepTemplate imple
                 .subtitle(config.getServerMessages().getMessage("register-subtitle"))
                 .stay(120)
                 .send(player);
-        LOGGER.atFine().log("Processed registration step for player: %s", player.getNickname());
+        LOGGER.atFine().log("Processed register step for player: %s", player.getNickname());
     }
     // #endregion
 
@@ -102,7 +110,7 @@ public class RegisterAuthenticationStep extends AuthenticationStepTemplate imple
          */
         public RegisterAuthenticationStepFactory() {
             super(STEP_NAME);
-            LOGGER.atFine().log("Initialized RegisterAuthenticationStepFactory");
+            LOGGER.atFine().log("Initialized AuthCraft RegisterAuthenticationStepFactory");
         }
 
         /**
@@ -113,7 +121,13 @@ public class RegisterAuthenticationStep extends AuthenticationStepTemplate imple
          */
         @Override
         public AuthenticationStep createNewAuthenticationStep(AuthenticationStepContext context) {
-            LOGGER.atFine().log("Creating new RegisterAuthenticationStep");
+            if (context == null) {
+                SecurityAuditLogger.logFailure("RegisterAuthenticationStepFactory", null, "Context is null on step factory event");
+                LOGGER.atWarning().log("Auth fail: register step factory, reason: context is null");
+                return null;
+            }
+            SecurityAuditLogger.logSuccess("RegisterAuthenticationStepFactory", null, String.format("Step factory event triggered for player: %s", context.getAccount() != null && context.getAccount().getPlayer().isPresent() ? context.getAccount().getPlayer().get().getName() : "null"));
+            LOGGER.atFine().log("Creating new AuthCraft RegisterAuthenticationStep");
             return new RegisterAuthenticationStep(context);
         }
     }

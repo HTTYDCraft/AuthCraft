@@ -9,6 +9,7 @@ import com.httydcraft.authcraft.api.crypto.HashInput;
 import com.httydcraft.authcraft.api.event.AccountTryLoginEvent;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.api.step.AuthenticationStep;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 // #region Class Documentation
 /**
@@ -44,14 +45,39 @@ public class LoginCommandImplementation {
      */
     public void performLogin(ServerPlayer player, Account account, String password) {
         Preconditions.checkNotNull(player, "player must not be null");
-        Preconditions.checkNotNull(account, "account must not be null");
         Preconditions.checkNotNull(password, "password must not be null");
+
+        if (account == null) {
+            SecurityAuditLogger.logFailure("Login", player, "Account is null in implementation");
+            player.sendMessage(config.getServerMessages().getMessage("account-not-found"));
+            return;
+        }
+
+        if (!account.isRegistered()) {
+            SecurityAuditLogger.logFailure("Login", player, "Account not registered: " + account.getPlayerId());
+            player.sendMessage(config.getServerMessages().getMessage("account-not-registered"));
+            return;
+        }
 
         AuthenticationStep currentAuthenticationStep = account.getCurrentAuthenticationStep();
         HashInput passwordInput = HashInput.of(password);
         boolean isWrongPassword = !account.getCryptoProvider().matches(passwordInput, account.getPasswordHash());
 
-        LOGGER.atFine().log("Processing login for account: %s, wrong password: %b", account.getPlayerId(), isWrongPassword);
+        if (isWrongPassword) {
+            SecurityAuditLogger.logFailure("Login", player, "Wrong password for account: " + account.getPlayerId());
+            player.sendMessage(config.getServerMessages().getMessage("wrong-password"));
+            return;
+        }
+
+        // Успешный вход
+        if (!account.getCryptoProvider().getIdentifier().equals(config.getActiveHashType().getIdentifier())) {
+            account.setCryptoProvider(config.getActiveHashType());
+            // Можно добавить отдельный лог для смены hash type, если требуется
+        }
+        currentAuthenticationStep.getAuthenticationStepContext().setCanPassToNextStep(true);
+        account.nextAuthenticationStep(plugin.getAuthenticationContextFactoryBucket().createContext(account));
+        player.sendMessage(config.getServerMessages().getMessage("login-success"));
+        SecurityAuditLogger.logSuccess("Login successful", player, "Login successful for account: " + account.getPlayerId());
 
         plugin.getEventBus().publish(AccountTryLoginEvent.class, account, isWrongPassword, !isWrongPassword)
                 .thenAccept(tryLoginEventPostResult -> {
@@ -60,15 +86,6 @@ public class LoginCommandImplementation {
                         return;
                     }
 
-                    if (!account.getCryptoProvider().getIdentifier().equals(config.getActiveHashType().getIdentifier())) {
-                        account.setCryptoProvider(config.getActiveHashType());
-                        account.setPasswordHash(config.getActiveHashType().hash(passwordInput));
-                        LOGGER.atInfo().log("Updated hash type for account: %s", account.getPlayerId());
-                    }
-
-                    currentAuthenticationStep.getAuthenticationStepContext().setCanPassToNextStep(true);
-                    account.nextAuthenticationStep(plugin.getAuthenticationContextFactoryBucket().createContext(account));
-                    player.sendMessage(config.getServerMessages().getMessage("login-success"));
                     LOGGER.atInfo().log("Login successful for account: %s", account.getPlayerId());
                 });
     }

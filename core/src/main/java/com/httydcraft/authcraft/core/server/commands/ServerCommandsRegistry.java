@@ -5,14 +5,22 @@ import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.api.AuthPlugin;
 import com.httydcraft.authcraft.api.bucket.AuthenticatingAccountBucket;
 import com.httydcraft.authcraft.api.bucket.LinkConfirmationBucket;
-import com.httydcraft.authcraft.core.commands.parameter.MessengerLinkContext;
-import com.httydcraft.authcraft.core.commands.validator.CommandCooldownCondition;
-import com.httydcraft.authcraft.api.config.PluginConfig;
-import com.httydcraft.authcraft.api.database.AccountDatabase;
+import com.httydcraft.authcraft.api.config.link.LinkSettings;
+import com.httydcraft.authcraft.api.config.message.server.ServerMessages;
+import com.httydcraft.authcraft.api.link.LinkType;
 import com.httydcraft.authcraft.api.link.user.LinkUser;
 import com.httydcraft.authcraft.api.link.user.confirmation.LinkConfirmationUser;
 import com.httydcraft.authcraft.api.link.user.info.LinkUserIdentificator;
 import com.httydcraft.authcraft.api.link.user.info.impl.UserNumberIdentificator;
+import com.httydcraft.authcraft.api.type.LinkConfirmationType;
+import com.httydcraft.authcraft.core.commands.*;
+import com.httydcraft.authcraft.core.commands.parameter.MessengerLinkContext;
+import com.httydcraft.authcraft.core.commands.validator.CommandCooldownCondition;
+import com.httydcraft.authcraft.api.config.PluginConfig;
+import com.httydcraft.authcraft.api.database.AccountDatabase;
+import com.httydcraft.authcraft.core.link.discord.DiscordLinkType;
+import com.httydcraft.authcraft.core.link.telegram.TelegramLinkType;
+import com.httydcraft.authcraft.core.link.vk.VKLinkType;
 import com.httydcraft.authcraft.core.server.commands.annotations.Admin;
 import com.httydcraft.authcraft.core.server.commands.annotations.DiscordUse;
 import com.httydcraft.authcraft.core.server.commands.annotations.GoogleUse;
@@ -23,6 +31,7 @@ import com.httydcraft.authcraft.core.server.commands.parameters.ArgumentAccount;
 import com.httydcraft.authcraft.core.server.commands.parameters.DoublePassword;
 import com.httydcraft.authcraft.core.server.commands.parameters.NewPassword;
 import com.httydcraft.authcraft.core.server.commands.parameters.RegisterPassword;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import io.github.revxrsal.eventbus.EventBus;
 import revxrsal.commands.CommandHandler;
 import revxrsal.commands.command.ArgumentStack;
@@ -32,6 +41,7 @@ import revxrsal.commands.exception.SendMessageException;
 import revxrsal.commands.orphan.OrphanCommand;
 import revxrsal.commands.orphan.Orphans;
 
+import java.util.Collection;
 import java.util.Optional;
 
 // #region Class Documentation
@@ -52,7 +62,12 @@ public abstract class ServerCommandsRegistry {
      * @param commandHandler The command handler to register commands with. Must not be null.
      */
     public ServerCommandsRegistry(CommandHandler commandHandler) {
-        this.commandHandler = Preconditions.checkNotNull(commandHandler, "commandHandler must not be null");
+        SecurityAuditLogger.logSuccess("ServerCommandsRegistry: command registry event", null, "Command registry event triggered");
+        if (commandHandler == null) {
+            SecurityAuditLogger.logFailure("ServerCommandsRegistry", null, "CommandHandler is null on command registry event");
+            throw new NullPointerException("commandHandler must not be null");
+        }
+        this.commandHandler = commandHandler;
         LOGGER.atFine().log("Initialized ServerCommandsRegistry");
 
         registerCommandContexts();
@@ -270,39 +285,60 @@ public abstract class ServerCommandsRegistry {
      * Registers dependencies for the command handler.
      */
     private void registerDependencies() {
-        LOGGER.atFine().log("Registering command dependencies");
-        commandHandler.registerDependency(AuthPlugin.class, plugin);
-        commandHandler.registerDependency(PluginConfig.class, plugin.getConfig());
-        commandHandler.registerDependency(AccountDatabase.class, plugin.getAccountDatabase());
-        commandHandler.registerDependency(EventBus.class, plugin.getEventBus());
         commandHandler.registerDependency(AuthenticatingAccountBucket.class, plugin.getAuthenticatingAccountBucket());
         commandHandler.registerDependency(LinkConfirmationBucket.class, plugin.getLinkConfirmationBucket());
+        commandHandler.registerDependency(EventBus.class, plugin.getEventBus());
+        commandHandler.registerDependency(PluginConfig.class, plugin.getConfig());
+        commandHandler.registerDependency(ServerMessages.class, plugin.getConfig().getServerMessages());
+        commandHandler.registerDependency(AccountDatabase.class, plugin.getAccountDatabase());
+        commandHandler.registerDependency(AuthPlugin.class, plugin);
     }
-    // #endregion
+
+// #endregion
 
     // #region Command Registration
-    /**
-     * Registers a command with the handler.
-     *
-     * @param command The command to register. Must not be null.
-     */
-    protected void registerCommand(Object command) {
-        Preconditions.checkNotNull(command, "command must not be null");
-        commandHandler.register(command);
-        LOGGER.atFine().log("Registered command: %s", command.getClass().getSimpleName());
+    protected void registerCommands() {
+        try {
+            commandHandler.register(new AuthCommand(), new LoginCommand(), new RegisterCommand(), new ChangePasswordCommand(), new GoogleCodeCommand(),
+                    new GoogleCommand(), new GoogleUnlinkCommand(), new LogoutCommand());
+
+            if (confirmationTypeEnabled(LinkConfirmationType.FROM_GAME))
+                commandHandler.register(Orphans.path("code").handler(new LinkCodeCommand()));
+            if (plugin.getConfig().getVKSettings().isEnabled())
+                registerLinkCommand(VKLinkType.getInstance(), new VKLinkCommand(VKLinkType.getInstance().getServerMessages()));
+            if (plugin.getConfig().getTelegramSettings().isEnabled())
+                registerLinkCommand(TelegramLinkType.getInstance(), new TelegramLinkCommand(TelegramLinkType.getInstance().getServerMessages()));
+            if (plugin.getConfig().getDiscordSettings().isEnabled())
+                registerLinkCommand(DiscordLinkType.getInstance(), new DiscordLinkCommand(DiscordLinkType.getInstance().getServerMessages()));
+            SecurityAuditLogger.logSuccess("ServerCommandsRegistry: command registration successful", null, "Commands registered successfully");
+        } catch (Exception e) {
+            SecurityAuditLogger.logFailure("ServerCommandsRegistry", null, "Error registering commands: " + e.getMessage());
+            throw e;
+        }
     }
 
-    /**
-     * Registers an orphan command with the handler.
-     *
-     * @param path The command path. Must not be null.
-     * @param command The orphan command to register. Must not be null.
-     */
-    protected void registerOrphanCommand(String path, OrphanCommand command) {
-        Preconditions.checkNotNull(path, "path must not be null");
-        Preconditions.checkNotNull(command, "command must not be null");
-        commandHandler.register(Orphans.path(path).handler(command));
-        LOGGER.atFine().log("Registered orphan command at path: %s", path);
+    private void registerLinkCommand(LinkType linkType, OrphanCommand linkCommand) {
+        if (!confirmationTypeEnabled(linkType, LinkConfirmationType.FROM_LINK))
+            return;
+        commandHandler.register(Orphans.path(makeServerCommandPaths(linkType, MessengerLinkCommandTemplate.CONFIGURATION_KEY)).handler(linkCommand));
     }
+
+    private boolean confirmationTypeEnabled(LinkType linkType, LinkConfirmationType confirmationType) {
+        return linkType.findSettings()
+                .map(LinkSettings::getLinkConfirmationTypes)
+                .map(confirmationTypes -> confirmationTypes.contains(confirmationType))
+                .orElse(false);
+    }
+
+    private boolean confirmationTypeEnabled(LinkConfirmationType confirmationType) {
+        Collection<LinkType> linkTypes = plugin.getLinkTypeProvider().getLinkTypes();
+        return linkTypes.stream().anyMatch(linkType -> confirmationTypeEnabled(linkType, confirmationType));
+    }
+
+    private String[] makeServerCommandPaths(LinkType linkType, String commandPathKey) {
+        return linkType.getSettings().getProxyCommandPaths().getCommandPath(commandPathKey).getCommandPaths();
+    }
+
+
     // #endregion
 }

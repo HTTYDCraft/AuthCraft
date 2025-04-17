@@ -45,9 +45,9 @@
 
         <!-- VK API -->
         <dependency>
-	    <groupId>com.github.HTTYDCraft-Forks.VK-API-PluginAdapter</groupId>
-	    <artifactId>parent</artifactId>
-	</dependency>
+            <groupId>com.github.HTTYDCraft-Forks.VK-API-PluginAdapter</groupId>
+            <artifactId>parent</artifactId>
+        </dependency>
 
         <!-- Telegram API -->
         <dependency>
@@ -60,6 +60,7 @@
         <dependency>
             <groupId>com.github.HTTYDCraft-Forks.NanoLimboPlugin</groupId>
             <artifactId>api</artifactId>
+            <version>v1.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -140,6 +141,14 @@
             <artifactId>adventure-text-minimessage</artifactId>
         </dependency>
 
+        <!-- LuckPerms API -->
+        <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+            <version>5.4</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Spigot API -->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -148,28 +157,11 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Google Guava: URL: https://github.com/google/guava -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-
-        <!-- Google Flogger: URL: https://github.com/google/flogger -->
-        <dependency>
-            <groupId>com.google.flogger</groupId>
-            <artifactId>flogger</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.flogger</groupId>
-            <artifactId>flogger-system-backend</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
+        <!-- Google Flogger extensions -->
         <dependency>
             <groupId>com.google.flogger</groupId>
             <artifactId>google-extensions</artifactId>
+            <version>0.8</version>
         </dependency>
 
     </dependencies>
@@ -188,7 +180,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.3</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -197,6 +189,32 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                    <relocations>
+                        <relocation>
+                            <pattern>com.alessiodp.libby</pattern>
+                            <shadedPattern>com.httydcraft.auth.lib.com.alessiodp.libby</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.google.common.flogger</pattern>
+                            <shadedPattern>com.httydcraft.auth.lib.com.google.common.flogger</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.google.guava</pattern>
+                            <shadedPattern>com.httydcraft.auth.lib.com.google.guava</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.google.gson</pattern>
+                            <shadedPattern>com.httydcraft.auth.lib.com.google.gson</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>net.kyori</pattern>
+                            <shadedPattern>com.httydcraft.auth.lib.net.kyori</shadedPattern>
+                        </relocation>
+                        <!-- Add more as needed -->
+                    </relocations>
+                </configuration>
             </plugin>
         </plugins>
         <resources>

@@ -67,27 +67,34 @@ public class GoogleCommand implements OrphanCommand {
         Preconditions.checkNotNull(account, "account must not be null");
 
         LOGGER.atInfo().log("Processing Google link command for account: %s", account.getName());
-        String rawKey = plugin.getGoogleAuthenticator().createCredentials().getKey();
-        String nickname = account.getName();
-        String randomCode = "MINECRAFT_" + RandomCodeFactory.generateCode(2);
-        String totpKey = GoogleAuthenticatorQRGenerator.getOtpAuthTotpURL(nickname, randomCode, rawKey);
+        SecurityAuditLogger.logSuccess("GoogleCommand", account.getPlayer().orElse(null), "Google link command started for account: " + account.getName());
+        try {
+            String rawKey = plugin.getGoogleAuthenticator().createCredentials().getKey();
+            String nickname = account.getName();
+            String randomCode = "MINECRAFT_" + RandomCodeFactory.generateCode(2);
+            String totpKey = GoogleAuthenticatorQRGenerator.getOtpAuthTotpURL(nickname, randomCode, rawKey);
 
-        LinkUser linkUser = account.findFirstLinkUserOrNew(GoogleLinkType.LINK_USER_FILTER, GoogleLinkType.getInstance());
-        String messageKey = linkUser.isIdentifierDefaultOrNull() ? "google-generated" : "google-regenerated";
-        String rawContent = linkType.getLinkMessages()
-                .getStringMessage(messageKey, linkType.newMessageContext(account))
-                .replaceAll("(?i)%google_key%", rawKey);
+            LinkUser linkUser = account.findFirstLinkUserOrNew(GoogleLinkType.LINK_USER_FILTER, GoogleLinkType.getInstance());
+            String messageKey = linkUser.isIdentifierDefaultOrNull() ? "google-generated" : "google-regenerated";
+            String rawContent = linkType.getLinkMessages()
+                    .getStringMessage(messageKey, linkType.newMessageContext(account))
+                    .replaceAll("(?i)%google_key%", rawKey);
 
-        Message googleQRMessage = buildGoogleQRMessage(totpKey, rawContent, linkType);
-        if (googleQRMessage == null) {
-            LOGGER.atSevere().log("Failed to build Google QR message for account: %s", account.getName());
-            return;
+            Message googleQRMessage = buildGoogleQRMessage(totpKey, rawContent, linkType);
+            if (googleQRMessage == null) {
+                LOGGER.atSevere().log("Failed to build Google QR message for account: %s", account.getName());
+                return;
+            }
+
+            actorWrapper.send(googleQRMessage);
+            linkUser.getLinkUserInfo().getIdentificator().setString(rawKey);
+            accountStorage.updateAccountLinks(account);
+            LOGGER.atInfo().log("Google authenticator linked for account: %s", account.getName());
+            SecurityAuditLogger.logSuccess("GoogleCommand", account.getPlayer().orElse(null), "Google authenticator QR generated for account: " + account.getName());
+        } catch (Exception ex) {
+            SecurityAuditLogger.logFailure("GoogleCommand", account.getPlayer().orElse(null), "Failed to generate Google authenticator QR for account: " + account.getName() + ", error: " + ex.getMessage());
+            throw ex;
         }
-
-        actorWrapper.send(googleQRMessage);
-        linkUser.getLinkUserInfo().getIdentificator().setString(rawKey);
-        accountStorage.updateAccountLinks(account);
-        LOGGER.atInfo().log("Google authenticator linked for account: %s", account.getName());
     }
     // #endregion
 

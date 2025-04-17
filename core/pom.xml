@@ -157,5 +157,12 @@
             <artifactId>google-extensions</artifactId>
         </dependency>
 
+        <!-- LuckPerms API -->
+        <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+        </dependency>
+
+
     </dependencies>
 </project>

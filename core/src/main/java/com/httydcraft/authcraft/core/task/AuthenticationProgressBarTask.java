@@ -10,8 +10,10 @@ import com.httydcraft.authcraft.api.event.PlayerLogoutEvent;
 import com.httydcraft.authcraft.api.model.AuthenticationTask;
 import com.httydcraft.authcraft.api.model.PlayerIdSupplier;
 import com.httydcraft.authcraft.api.server.bossbar.ServerBossbar;
+import com.httydcraft.authcraft.api.server.message.ServerComponent;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.api.server.scheduler.ServerScheduler;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import io.github.revxrsal.eventbus.SubscribeEvent;
 
 import java.util.Date;
@@ -46,31 +48,46 @@ public class AuthenticationProgressBarTask implements AuthenticationTask {
         this.settings = plugin.getConfig().getBossBarSettings();
         this.proxyScheduler = plugin.getCore().schedule(() -> {
             long now = System.currentTimeMillis();
+            long timeoutMillis = plugin.getConfig().getAuthTime();
+
             Iterator<Entry<String, ServerBossbar>> iterator = progressBars.entrySet().iterator();
+
             while (iterator.hasNext()) {
                 Entry<String, ServerBossbar> entry = iterator.next();
-                String playerId = entry.getKey();
-                ServerBossbar bossbar = entry.getValue();
-                Account account = plugin.getAuthenticatingAccountBucket()
-                        .getAuthenticatingAccountNullable(PlayerIdSupplier.of(playerId));
-                if (account == null || !plugin.getAuthenticatingAccountBucket().isAuthenticating(account)) {
-                    bossbar.removeAll();
+                String accountId = entry.getKey();
+                ServerBossbar progressBar = entry.getValue();
+                PlayerIdSupplier idSupplier = PlayerIdSupplier.of(accountId);
+                Optional<Account> accountOptional = plugin.getAuthenticatingAccountBucket().getAuthenticatingAccount(idSupplier);
+                if (!accountOptional.isPresent()) {
                     iterator.remove();
-                    LOGGER.atFine().log("Removed boss bar for player ID: %s due to invalid account", playerId);
+                    progressBar.removeAll();
                     continue;
                 }
-                long authenticationTimeout = account.getAuthenticationTimeout();
-                float progress = (float) (authenticationTimeout - now) / settings.getTimeout();
-                if (progress <= 0) {
-                    bossbar.removeAll();
+
+                Account account = accountOptional.get();
+                Optional<ServerPlayer> player = account.getPlayer();
+                if (!player.isPresent()) {
                     iterator.remove();
-                    account.getPlayer().ifPresent(player -> player.kick(
-                            settings.getMessages().getMessage("timeout", new Date(authenticationTimeout))));
-                    LOGGER.atFine().log("Timed out and kicked player ID: %s", playerId);
+                    progressBar.removeAll();
                     continue;
                 }
-                bossbar.progress(Math.max(0, Math.min(1, progress)));
-                LOGGER.atFine().log("Updated boss bar progress for player ID: %s, progress: %f", playerId, progress);
+
+                long accountTimeElapsedFromEntryMillis = (now -
+                        plugin.getAuthenticatingAccountBucket().getEnterTimestampOrZero(idSupplier));
+
+                if (progressBar.players().isEmpty())
+                    progressBar.send(player.get());
+
+                float progress = 1.0F - (accountTimeElapsedFromEntryMillis / (float) timeoutMillis);
+                if (progress > 1 || progress < 0) {
+                    iterator.remove();
+                    progressBar.removeAll();
+                    continue;
+                }
+
+                String formattedDuration = settings.getDurationPlaceholderFormat().format(new Date(timeoutMillis - accountTimeElapsedFromEntryMillis));
+                progressBar.progress(progress);
+                progressBar.title(ServerComponent.fromJson(settings.getTitle().jsonText().replace("%duration%", formattedDuration)));
             }
         }, 0, 1, TimeUnit.SECONDS);
         plugin.getEventBus().register(this);
@@ -96,45 +113,31 @@ public class AuthenticationProgressBarTask implements AuthenticationTask {
     // #region Event Handlers
     /**
      * Handles account join events by creating a boss bar for the player.
-     *
-     * @param event The account join event. Must not be null.
      */
     @SubscribeEvent
-    public void onAccountJoin(AccountJoinEvent event) {
-        Preconditions.checkNotNull(event, "event must not be null");
-        Account account = event.getAccount();
-        String playerId = account.getPlayerId();
-        if (progressBars.containsKey(playerId)) {
-            LOGGER.atFine().log("Boss bar already exists for player ID: %s", playerId);
-            return;
-        }
-        Optional<ServerPlayer> playerOptional = account.getPlayer();
-        if (!playerOptional.isPresent()) {
-            LOGGER.atFine().log("No player found for account: %s", playerId);
-            return;
-        }
-        ServerPlayer player = playerOptional.get();
-        ServerBossbar bossbar = settings.createBossBar(
-                settings.getMessages().getMessage("authenticating", new Date(account.getAuthenticationTimeout())));
-        bossbar.addPlayer(player);
-        progressBars.put(playerId, bossbar);
-        LOGGER.atFine().log("Created boss bar for player ID: %s", playerId);
+    public void onJoin(AccountJoinEvent e) {
+        SecurityAuditLogger.logSuccess("AuthenticationProgressBarTask", null, "Account joined, bossbar created for: " + e.getAccount().getPlayerId());
+        registerBossbar(e.getAccount());
     }
-
     /**
      * Handles player logout events by removing the boss bar.
-     *
-     * @param event The player logout event. Must not be null.
      */
     @SubscribeEvent
-    public void onPlayerLogout(PlayerLogoutEvent event) {
-        Preconditions.checkNotNull(event, "event must not be null");
-        String playerId = event.getPlayerId();
-        ServerBossbar bossbar = progressBars.remove(playerId);
-        if (bossbar != null) {
-            bossbar.removeAll();
-            LOGGER.atFine().log("Removed boss bar for player ID: %s due to logout", playerId);
+    public void onLogout(PlayerLogoutEvent e) {
+        SecurityAuditLogger.logSuccess("AuthenticationProgressBarTask", null, "Player logout, bossbar removed for: " + e.getPlayer().getPlayerId());
+        registerBossbar(e.getPlayer());
+    }
+
+    private void registerBossbar(PlayerIdSupplier playerIdSupplier) {
+        SecurityAuditLogger.logSuccess("AuthenticationProgressBarTask: bossbar event", null, "Bossbar event triggered");
+        if (playerIdSupplier == null) {
+            SecurityAuditLogger.logFailure("AuthenticationProgressBarTask", null, "PlayerIdSupplier is null on bossbar event");
+            return;
         }
+        ServerBossbar bossbar = settings.createBossbar();
+        if (bossbar == null)
+            return;
+        progressBars.put(playerIdSupplier.getPlayerId(), bossbar);
     }
     // #endregion
 }

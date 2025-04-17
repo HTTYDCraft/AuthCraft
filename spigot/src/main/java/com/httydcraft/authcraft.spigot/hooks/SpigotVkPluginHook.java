@@ -3,6 +3,7 @@ package com.httydcraft.authcraft.hooks;
 import com.google.common.base.Preconditions;
 import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.AuthPlugin;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import com.vk.api.sdk.client.VkApiClient;
 import com.vk.api.sdk.client.actors.GroupActor;
 import org.bukkit.Bukkit;
@@ -28,6 +29,7 @@ public class SpigotVkPluginHook implements VkPluginHook {
         boolean result = AuthPlugin.instance().getConfig().getVKSettings().isEnabled() &&
                 Bukkit.getPluginManager().isPluginEnabled("VkPlugin");
         LOGGER.atFine().log("Checked VK hook availability: %b", result);
+        SecurityAuditLogger.logSuccess("SpigotVkPluginHook: VK event", null, "VK hook availability checked");
         return result;
     }
 
@@ -41,6 +43,7 @@ public class SpigotVkPluginHook implements VkPluginHook {
     public VkApiClient getClient() {
         VkApiClient client = Bukkit.getPluginManager().getPlugin("VkPlugin").getVkApiProvider().getVkApiClient();
         LOGGER.atFine().log("Retrieved VK API client");
+        SecurityAuditLogger.logSuccess("SpigotVkPluginHook: VK event", null, "VK API client retrieved");
         return Preconditions.checkNotNull(client, "VK API client not available");
     }
 
@@ -54,6 +57,7 @@ public class SpigotVkPluginHook implements VkPluginHook {
     public GroupActor getActor() {
         GroupActor actor = Bukkit.getPluginManager().getPlugin("VkPlugin").getVkApiProvider().getActor();
         LOGGER.atFine().log("Retrieved VK group actor");
+        SecurityAuditLogger.logSuccess("SpigotVkPluginHook: VK event", null, "VK group actor retrieved");
         return Preconditions.checkNotNull(actor, "VK group actor not available");
     }
     // #endregion

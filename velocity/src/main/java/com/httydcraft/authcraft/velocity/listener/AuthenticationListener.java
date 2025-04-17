@@ -9,10 +9,11 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
-import com.velocitywired.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.httydcraft.authcraft.velocity.server.VelocityProxyServer;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 
 import java.util.Optional;
 
@@ -35,7 +36,7 @@ public class AuthenticationListener {
      */
     public AuthenticationListener(AuthPlugin plugin) {
         this.plugin = Preconditions.checkNotNull(plugin, "plugin must not be null");
-        LOGGER.atInfo().log("Initialized AuthenticationListener");
+        LOGGER.atInfo().log("Initialized AuthenticationListener for AuthCraft");
     }
     // #endregion
 
@@ -50,7 +51,10 @@ public class AuthenticationListener {
         Preconditions.checkNotNull(event, "event must not be null");
         LOGGER.atFine().log("Handling post-login event for player: %s", event.getPlayer().getUsername());
         plugin.getCore().wrapPlayer(event.getPlayer())
-                .ifPresent(player -> plugin.getLoginManagement().onLogin(player));
+                .ifPresent(player -> {
+                    SecurityAuditLogger.logSuccess("AuthenticationListener: player authentication event", player, "Authentication event triggered");
+                    plugin.getLoginManagement().onLogin(player);
+                });
     }
 
     /**
@@ -63,7 +67,10 @@ public class AuthenticationListener {
         Preconditions.checkNotNull(event, "event must not be null");
         LOGGER.atFine().log("Handling disconnect event for player: %s", event.getPlayer().getUsername());
         plugin.getCore().wrapPlayer(event.getPlayer())
-                .ifPresent(player -> plugin.getLoginManagement().onDisconnect(player));
+                .ifPresent(player -> {
+                    SecurityAuditLogger.logSuccess("AuthenticationListener: player disconnect event", player, "Disconnect event triggered");
+                    plugin.getLoginManagement().onDisconnect(player);
+                });
     }
 
     /**
@@ -87,6 +94,7 @@ public class AuthenticationListener {
                 LOGGER.atFine().log("Processing chat as password for player: %s", player.getNickname());
                 plugin.getEventBus().publish(PlayerChatPasswordEvent.class, player, event.getMessage());
                 event.setResult(PlayerChatEvent.ChatResult.denied());
+                SecurityAuditLogger.logSuccess("AuthenticationListener: player chat event", player, "Chat event triggered");
                 return;
             }
             if (!plugin.getConfig().shouldBlockChat() || event.getResult().getMessage().orElse("").startsWith("/")) {
@@ -96,6 +104,7 @@ public class AuthenticationListener {
             LOGGER.atFine().log("Blocking chat for player: %s", player.getNickname());
             player.sendMessage(plugin.getConfig().getServerMessages().getMessage("disabled-chat"));
             event.setResult(PlayerChatEvent.ChatResult.denied());
+            SecurityAuditLogger.logFailure("AuthenticationListener", player, "Chat blocked");
         });
     }
 
@@ -124,11 +133,13 @@ public class AuthenticationListener {
         String command = "/" + event.getCommand();
         if (plugin.getConfig().getAllowedCommands().stream().anyMatch(pattern -> pattern.matcher(command).find())) {
             LOGGER.atFine().log("Command %s allowed for player: %s", command, player.getNickname());
+            SecurityAuditLogger.logSuccess("AuthenticationListener: player command event", player, "Command allowed");
             return;
         }
         LOGGER.atFine().log("Blocking command %s for player: %s", command, player.getNickname());
         player.sendMessage(plugin.getConfig().getServerMessages().getMessage("disabled-command"));
         event.setResult(CommandExecuteEvent.CommandResult.denied());
+        SecurityAuditLogger.logFailure("AuthenticationListener", player, "Command blocked");
     }
 
     /**
@@ -153,16 +164,19 @@ public class AuthenticationListener {
                                 .asProxyServer()
                                 .as(VelocityProxyServer.class)
                                 .getServer()));
+                SecurityAuditLogger.logSuccess("AuthenticationListener: player server connect event", player, "Server connect allowed");
                 return;
             }
             String serverId = resultServerOptional.get().getServerInfo().getName();
             if (plugin.getConfig().getBlockedServers().stream().noneMatch(server -> serverId.equals(server.getId()))) {
                 LOGGER.atFine().log("Server %s not blocked, allowing connect for player: %s", serverId, player.getNickname());
+                SecurityAuditLogger.logSuccess("AuthenticationListener: player server connect event", player, "Server connect allowed");
                 return;
             }
             LOGGER.atFine().log("Blocking server %s for player: %s", serverId, player.getNickname());
             player.sendMessage(plugin.getConfig().getServerMessages().getMessage("disabled-server"));
             event.setResult(ServerPreConnectEvent.ServerResult.denied());
+            SecurityAuditLogger.logFailure("AuthenticationListener", player, "Server connect blocked");
         });
     }
     // #endregion

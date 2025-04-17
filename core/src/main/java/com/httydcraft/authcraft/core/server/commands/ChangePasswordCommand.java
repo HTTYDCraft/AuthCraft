@@ -1,7 +1,6 @@
 package com.httydcraft.authcraft.core.server.commands;
 
 import com.google.common.base.Preconditions;
-import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.api.AuthPlugin;
 import com.httydcraft.authcraft.api.config.PluginConfig;
 import com.httydcraft.authcraft.api.crypto.HashInput;
@@ -10,6 +9,7 @@ import com.httydcraft.authcraft.api.event.AccountTryChangePasswordEvent;
 import com.httydcraft.authcraft.core.server.commands.parameters.DoublePassword;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
 import com.httydcraft.authcraft.core.commands.annotation.CommandCooldown;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import io.github.revxrsal.eventbus.PostResult;
 import revxrsal.commands.annotation.Command;
 import revxrsal.commands.annotation.DefaultFor;
@@ -22,7 +22,6 @@ import revxrsal.commands.annotation.Dependency;
  */
 @Command({"passchange", "changepass", "changepassword"})
 public class ChangePasswordCommand {
-    private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
     @Dependency
     private AuthPlugin plugin;
     @Dependency
@@ -43,13 +42,13 @@ public class ChangePasswordCommand {
     public void changePlayerPassword(ServerPlayer sender, DoublePassword password) {
         Preconditions.checkNotNull(sender, "sender must not be null");
         Preconditions.checkNotNull(password, "password must not be null");
-        LOGGER.atFine().log("Executing changePlayerPassword for player: %s", sender.getNickname());
+        SecurityAuditLogger.logSuccess("ChangePasswordCommand", sender, String.format("Password change command started for player: %s", sender.getName()));
 
         String id = config.getActiveIdentifierType().getId(sender);
         accountStorage.getAccount(id).thenAcceptAsync(account -> {
             if (account == null || !account.isRegistered()) {
                 sender.sendMessage(config.getServerMessages().getMessage("account-not-found"));
-                LOGGER.atFine().log("Account not found for player: %s", sender.getNickname());
+                SecurityAuditLogger.logFailure("ChangePasswordCommand", sender, "Account not found or not registered");
                 return;
             }
 
@@ -60,25 +59,25 @@ public class ChangePasswordCommand {
                     .join();
 
             if (tryChangePasswordEventPostResult.getEvent().isCancelled()) {
-                LOGGER.atFine().log("Password change cancelled for account: %s", account.getPlayerId());
+                SecurityAuditLogger.logFailure("ChangePasswordCommand", sender, "Change cancelled by event");
                 return;
             }
 
             if (isWrongPassword) {
                 sender.sendMessage(config.getServerMessages().getMessage("wrong-old-password"));
-                LOGGER.atFine().log("Wrong old password for account: %s", account.getPlayerId());
+                SecurityAuditLogger.logFailure("ChangePasswordCommand", sender, "Wrong old password");
                 return;
             }
 
             if (!account.getCryptoProvider().getIdentifier().equals(config.getActiveHashType().getIdentifier())) {
                 account.setCryptoProvider(config.getActiveHashType());
-                LOGGER.atInfo().log("Updated hash type for account: %s", account.getPlayerId());
+                // Можно добавить отдельный лог для смены hash type, если требуется
             }
 
             account.setPasswordHash(account.getCryptoProvider().hash(HashInput.of(password.getNewPassword())));
             accountStorage.saveOrUpdateAccount(account);
             sender.sendMessage(config.getServerMessages().getMessage("change-success"));
-            LOGGER.atInfo().log("Password changed successfully for account: %s", account.getPlayerId());
+            SecurityAuditLogger.logSuccess("ChangePasswordCommand", sender, "Password changed successfully for account: " + account.getPlayerId());
         });
     }
     // #endregion

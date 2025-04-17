@@ -5,20 +5,22 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.httydcraft.authcraft.api.AuthPlugin;
 import com.httydcraft.authcraft.api.commands.MessageableCommandActor;
-import com.httydcraft.authcraft.bangee.BungeeAuthPluginBootstrap;
 import com.httydcraft.authcraft.api.account.Account;
 import com.httydcraft.authcraft.api.config.PluginConfig;
 import com.httydcraft.authcraft.api.config.message.MessageContext;
 import com.httydcraft.authcraft.api.model.PlayerIdSupplier;
-import com.httydcraft.authcraft.bangee.player.BungeeServerPlayer;
 import com.httydcraft.authcraft.api.server.command.ServerCommandActor;
-import com.httydcraft.authcraft.core.server.commands.ServerCommandsRegistry;
+import com.httydcraft.authcraft.bangee.BungeeAuthPluginBootstrap;
+import com.httydcraft.authcraft.bangee.commands.exception.BungeeExceptionHandler;
+import com.httydcraft.authcraft.bangee.player.BungeeServerPlayer;
+import com.httydcraft.authcraft.core.server.commands.*;
 import com.httydcraft.authcraft.core.server.commands.annotations.AuthenticationAccount;
-import com.httydcraft.authcraft.authcraft.server.commands.annotations.AuthenticationStepCommand;
+import com.httydcraft.authcraft.core.server.commands.annotations.AuthenticationStepCommand;
 import com.httydcraft.authcraft.core.server.commands.annotations.Permission;
 import com.httydcraft.authcraft.core.server.commands.exception.SendComponentException;
 import com.httydcraft.authcraft.core.server.commands.parameters.ArgumentServerPlayer;
 import com.httydcraft.authcraft.api.server.player.ServerPlayer;
+import com.httydcraft.authcraft.core.util.SecurityAuditLogger;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +29,8 @@ import revxrsal.commands.bungee.BungeeCommandActor;
 import revxrsal.commands.bungee.annotation.CommandPermission;
 import revxrsal.commands.bungee.core.BungeeHandler;
 import revxrsal.commands.process.ContextResolver;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 // #region Class Documentation
 /**
@@ -37,6 +41,7 @@ public class BungeeCommandsRegistry extends ServerCommandsRegistry {
     private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
     private final PluginConfig config;
     private final AuthPlugin plugin;
+    
 
     // #endregion
 
@@ -54,6 +59,7 @@ public class BungeeCommandsRegistry extends ServerCommandsRegistry {
                 .disableStackTraceSanitizing());
         this.config = authPlugin.getConfig();
         this.plugin = authPlugin;
+
         registerResolvers();
         registerConditions();
         commandHandler.registerExceptionHandler(SendComponentException.class,
@@ -125,15 +131,16 @@ public class BungeeCommandsRegistry extends ServerCommandsRegistry {
             if (!command.hasAnnotation(AuthenticationStepCommand.class)) {
                 return;
             }
-            Account account = plugin.getAuthenticatingAccountBucket().getAuthenticatingAccountNullable(player);
-            if (account.getCurrentAuthenticationStep() == null) {
-                return;
-            }
             String stepName = command.getAnnotation(AuthenticationStepCommand.class).stepName();
+            Account account = plugin.getAccountManagement().getAccount(player.getNickname()).orElse(null);
+            if (account == null) {
+                SecurityAuditLogger.logFailure("CommandEvent", player, "Blocked command: no account");
+                throw new SendComponentException(config.getServerMessages().getMessage("not-registered"));
+            }
             if (account.getCurrentAuthenticationStep().getStepName().equals(stepName)) {
                 return;
             }
-            LOGGER.atFine().log("Blocked command for player %s due to authentication step mismatch", player.getNickname());
+            SecurityAuditLogger.logFailure("CommandEvent", player, "Blocked command: authentication step mismatch");
             throw new SendComponentException(config.getServerMessages().getSubMessages("authentication-step-usage")
                     .getMessage(account.getCurrentAuthenticationStep().getStepName()));
         });
@@ -171,4 +178,23 @@ public class BungeeCommandsRegistry extends ServerCommandsRegistry {
         return new BungeeServerPlayer(player);
     }
     // #endregion
+
+    // #region Command Registration
+    /**
+     * Registers commands for the AuthCraft plugin.
+     */
+    private void registerCommands() {
+        super.registerCommands();
+        commandHandler.getCommands().forEach(cmd -> {
+            cmd.setPostProcessor((actor, arguments, result) -> {
+                if (actor.as(BungeeCommandActor.class).isPlayer()) {
+                    ServerPlayer player = new BungeeServerPlayer(actor.as(BungeeCommandActor.class).asPlayer());
+                    String argsString = arguments == null ? "" : Arrays.stream(arguments).map(String::valueOf).collect(Collectors.joining(" "));
+                    SecurityAuditLogger.logSuccess("CommandEvent", player, "Command executed: /" + cmd.getName() + (argsString.isEmpty() ? "" : " " + argsString));
+                }
+            });
+        });
+    }
+    // #endregion
+
 }

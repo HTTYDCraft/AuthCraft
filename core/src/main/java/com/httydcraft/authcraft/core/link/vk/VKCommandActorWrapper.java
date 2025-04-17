@@ -31,7 +31,7 @@ public class VKCommandActorWrapper extends LinkCommandActorWrapperTemplate<VkAct
     public VKCommandActorWrapper(VkActor actor) {
         super(actor);
         Preconditions.checkNotNull(actor, "actor must not be null");
-        LOGGER.atFine().log("Initialized VKCommandActorWrapper for actor: %s", actor.getId());
+        LOGGER.atFine().log("Initialized VKCommandActorWrapper for actor: %s");
     }
     // #endregion
 
