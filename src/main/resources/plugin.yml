@@ -1,27 +1,49 @@
-name: AuthCraft
-version: 1.0
-main: com.httydcraft.authcraft.AuthCraft
-api-version: 1.16
-commands:
-  register:
-    description: Register a new account
-    usage: /<command> <password>
-  login:
-    description: Log in to your account
-    usage: /<command> <password>
-  changepassword:
-    description: Change your password
-    usage: /<command> <old_password> <new_password>
-  logout:
-    description: Log out of your account
-    usage: /<command>
-  authcraft:
-    description: Admin commands for AuthCraft
-    usage: /<command> <backup|reload|stats>
-  2fa:
-    description: Manage two-factor authentication
-    usage: /<command> <enable|disable> [TOTP|TELEGRAM|VK]
-permissions:
-  authcraft.admin:
-    description: Allows access to admin commands
-    default: op
+
+  name: AuthCraft
+  version: 1.0.3
+  main: com.httydcraft.authcraft.AuthCraft
+  api-version: 1.16
+  authors: [HTTYDCraft]
+  description: A secure authentication plugin for Minecraft servers.
+
+  softdepend:
+    - LuckPerms
+  dependencies:
+    - HikariCP
+    - slf4j-api
+    - slf4j-simple
+    - sqlite-jdbc
+    - postgresql
+    - totp
+    - telegrambots
+    - vk-sdk
+    - commons-validator
+    - jbcrypt
+
+  commands:
+    register:
+      description: Register a new account
+      usage: /<command> <password>
+    login:
+      description: Log into your account
+      usage: /<command> <password>
+    changepassword:
+      description: Change your password
+      usage: /<command> <old_password> <new_password>
+    logout:
+      description: Log out of your account
+      usage: /<command>
+    2fa:
+      description: Manage two-factor authentication
+      usage: /<command> <enable|disable|verify> [TOTP|TELEGRAM|VK]
+    authcraft:
+      description: Admin commands for AuthCraft
+      usage: /<command> <backup|reload|stats>
+    authadmin:
+      description: Admin password/2FA reset
+      usage: /<command> <resetpw|disable2fa> <player>
+
+  permissions:
+    authcraft.admin:
+      description: Allows access to admin commands
+      default: op

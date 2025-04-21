@@ -1,43 +1,43 @@
-database:
-  type: sqlite
-  postgresql:
-    host: localhost
-    port: 5432
-    database: authcraft
-    username: authcraft
-    password: password
-    pool_size: 10
-    backup_command: "pg_dump -U authcraft -h localhost -p 5432 authcraft > authcraft_backup.sql"
-  sqlite:
-    file: authcraft.db
 
-security:
-  max_attempts: 5
-  block_duration: 900000
+  # Authentication method: 'uuid' or 'nickname'
+  auth:
+    method: uuid
 
-session:
-  timeout: 1800000
+  # Database configuration
+  database:
+    type: sqlite
+    sqlite:
+      file: authcraft.db
+    postgresql:
+      host: localhost
+      port: 5432
+      database: authcraft
+      username: authcraft
+      password: password
+      pool_size: 10
 
-password:
-  min_length: 8
-  max_length: 32
+  # Cloudflare Warp settings
+  cloudflare_warp:
+    mode: any  # Options: required, disabled, any
 
-2fa:
-  issuer: AuthCraft
+  # Telegram bot configuration
+  telegram:
+    token: your_telegram_bot_token
 
-telegram:
-  token: ""
-  admin_id: ""
+  # VK bot configuration
+  vk:
+    token: your_vk_bot_token
 
-vk:
-  token: ""
-  admin_id: ""
+  # Encryption key for 2FA secrets
+  encryption:
+    key: your_encryption_key
 
-connection_limit:
-  max_per_ip: 3
+  # Connection limit per IP
+  connection_limit: 3
 
-limbo:
-  world: limbo
+  # Language for messages (en or ru)
+  language: en
 
-encryption:
-  key: ""
+  # Role system settings
+  roles:
+    default: player

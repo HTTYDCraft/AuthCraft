@@ -14,7 +14,7 @@
 
 Файл `config.yml` находится в `plugins/AuthCraft`. Основные параметры:
 
-```yaml
+
 database:
   type: sqlite
   sqlite:
@@ -33,7 +33,7 @@ vk:
   token: your_vk_bot_token
 encryption:
   key: your_encryption_key
-```
+
 
 - **database.type**: `sqlite` или `postgresql`.
 - **sqlite.file**: Путь к файлу базы данных SQLite.
@@ -101,7 +101,7 @@ encryption:
 
 The `config.yml` file is located in `plugins/AuthCraft`. Key settings:
 
-```yaml
+
 database:
   type: sqlite
   sqlite:
@@ -120,7 +120,7 @@ vk:
   token: your_vk_bot_token
 encryption:
   key: your_encryption_key
-```
+
 
 - **database.type**: `sqlite` or `postgresql`.
 - **sqlite.file**: Path to the SQLite database file.

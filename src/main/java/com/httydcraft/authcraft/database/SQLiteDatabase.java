@@ -1,7 +1,7 @@
 package com.httydcraft.authcraft.database;
 
 import com.httydcraft.authcraft.AuthCraft;
-import com.httydcraft.authcraft.utils.AuditLogger;
+import com.httydcraft.authcraft.AuditLogger;
 import com.zaxxer.hikari.HikariConfig;
 
 import java.io.File;
@@ -15,28 +15,26 @@ import java.sql.Statement;
 public class SQLiteDatabase implements Database {
     private final AuthCraft plugin;
     private final AuditLogger auditLogger;
+    private final DatabaseManager databaseManager;
     private final File dbFile;
 
-    public SQLiteDatabase(AuthCraft plugin) {
+    public SQLiteDatabase(AuthCraft plugin, DatabaseManager databaseManager) {
         this.plugin = plugin;
         this.auditLogger = plugin.getUtilsManager().getAuditLogger();
+        this.databaseManager = databaseManager;
         String dbFileName = plugin.getConfig().getString("database.sqlite.file", "authcraft.db");
-        if (dbFileName == null || dbFileName.isEmpty()) {
-            throw new IllegalStateException("SQLite database file name is missing in configuration");
-        }
         this.dbFile = new File(plugin.getDataFolder(), dbFileName);
         ensureDbFile();
     }
 
     private void ensureDbFile() {
-        if (!plugin.getDataFolder().exists() && !plugin.getDataFolder().mkdirs()) {
-            throw new IllegalStateException("Could not create plugin data folder");
+        if (!plugin.getDataFolder().exists()) {
+            plugin.getDataFolder().mkdirs();
         }
         if (!dbFile.exists()) {
             try {
-                if (dbFile.createNewFile()) {
-                    auditLogger.log("Created new SQLite database file: " + dbFile.getAbsolutePath());
-                }
+                dbFile.createNewFile();
+                auditLogger.log("Created new SQLite database file: " + dbFile.getAbsolutePath());
             } catch (IOException e) {
                 auditLogger.log("Failed to create SQLite database file: " + e.getMessage());
                 throw new IllegalStateException("Could not create SQLite database file", e);
@@ -51,21 +49,18 @@ public class SQLiteDatabase implements Database {
         config.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
         config.setMaximumPoolSize(1);
         config.setMinimumIdle(1);
-        config.setIdleTimeout(30000);
+        config.setIdleTimeout(0); // Disable idleTimeout for fixed-size pool
         config.setConnectionTimeout(10000);
-        config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         auditLogger.log("Configured HikariCP for SQLite");
         return config;
     }
 
     @Override
     public void initializeTables() throws SQLException {
-        try (Connection conn = plugin.getDatabaseManager().getConnection();
+        try (Connection conn = databaseManager.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS players (" +
-                    "uuid TEXT PRIMARY KEY, " +
+                    "identifier TEXT PRIMARY KEY, " +
                     "username TEXT NOT NULL, " +
                     "password TEXT NOT NULL, " +
                     "twofa_method TEXT, " +
