@@ -1,0 +1,5 @@
+name: AuthCraft
+version: '${project.version}'
+main: com.httydcraft.authcraft.AuthCraft
+api-version: '1.16'
+load: STARTUP
