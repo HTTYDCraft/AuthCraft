@@ -1,0 +1,18 @@
+# Пример структуры ролей с наследованием
+roles:
+  default:
+    permissions:
+      - essentials.spawn
+      - authcraft.basic
+    inherit: []
+  moderator:
+    permissions:
+      - essentials.kick
+      - essentials.mute
+    inherit:
+      - default
+  admin:
+    permissions:
+      - '*'
+    inherit:
+      - moderator
