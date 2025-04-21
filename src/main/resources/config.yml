@@ -1,0 +1,43 @@
+database:
+  type: sqlite
+  postgresql:
+    host: localhost
+    port: 5432
+    database: authcraft
+    username: authcraft
+    password: password
+    pool_size: 10
+    backup_command: "pg_dump -U authcraft -h localhost -p 5432 authcraft > authcraft_backup.sql"
+  sqlite:
+    file: authcraft.db
+
+security:
+  max_attempts: 5
+  block_duration: 900000
+
+session:
+  timeout: 1800000
+
+password:
+  min_length: 8
+  max_length: 32
+
+2fa:
+  issuer: AuthCraft
+
+telegram:
+  token: ""
+  admin_id: ""
+
+vk:
+  token: ""
+  admin_id: ""
+
+connection_limit:
+  max_per_ip: 3
+
+limbo:
+  world: limbo
+
+encryption:
+  key: ""

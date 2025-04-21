@@ -1,5 +1,27 @@
 name: AuthCraft
-version: '${project.version}'
+version: 1.0
 main: com.httydcraft.authcraft.AuthCraft
-api-version: '1.16'
-load: STARTUP
+api-version: 1.16
+commands:
+  register:
+    description: Register a new account
+    usage: /<command> <password>
+  login:
+    description: Log in to your account
+    usage: /<command> <password>
+  changepassword:
+    description: Change your password
+    usage: /<command> <old_password> <new_password>
+  logout:
+    description: Log out of your account
+    usage: /<command>
+  authcraft:
+    description: Admin commands for AuthCraft
+    usage: /<command> <backup|reload|stats>
+  2fa:
+    description: Manage two-factor authentication
+    usage: /<command> <enable|disable> [TOTP|TELEGRAM|VK]
+permissions:
+  authcraft.admin:
+    description: Allows access to admin commands
+    default: op

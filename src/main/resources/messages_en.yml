@@ -1,0 +1,60 @@
+
+  command:
+    player_only: "&cThis command can only be used by players."
+
+  register:
+    usage: "&cUsage: /register <password>"
+    already_authenticated: "&cYou are already authenticated."
+    already_registered: "&cYou are already registered."
+    invalid_password: "&cPassword must be %min_length%-%max_length% characters, contain uppercase, lowercase, digits, and not match username."
+    success: "&aSuccessfully registered."
+
+  login:
+    usage: "&cUsage: /login <password>"
+    already_authenticated: "&cYou are already authenticated."
+    too_many_attempts: "&cToo many failed attempts. Try again later."
+    invalid_credentials: "&cInvalid password."
+    success: "&aSuccessfully logged in."
+    2fa_required: "&ePlease enter your 2FA code using /2fa verify <code>."
+
+  changepassword:
+    usage: "&cUsage: /changepassword <oldPassword> <newPassword>"
+    not_authenticated: "&cYou must be authenticated to change your password."
+    invalid_password: "&cNew password must be %min_length%-%max_length% characters, contain uppercase, lowercase, digits, and not match username."
+    invalid_old_password: "&cIncorrect old password."
+    success: "&aPassword changed successfully."
+
+  logout:
+    usage: "&cUsage: /logout"
+    not_authenticated: "&cYou are not authenticated."
+    success: "&aSuccessfully logged out."
+
+  authcraft:
+    usage: "&cUsage: /authcraft <backup|reload|stats>"
+    backup_success: "&aDatabase backup created successfully."
+    reload_success: "&aConfiguration reloaded successfully."
+    stats: "&aDisplayed server statistics."
+
+  2fa:
+    usage: "&cUsage: /2fa <enable <TOTP|TELEGRAM|VK>|disable|verify <code>>"
+    verify_usage: "&cUsage: /2fa verify <code>"
+    not_authenticated: "&cYou must be authenticated or have a pending 2FA verification."
+    already_enabled: "&c2FA is already enabled."
+    not_enabled: "&c2FA is not enabled."
+    enabled: "&a2FA enabled successfully."
+    disabled: "&a2FA disabled successfully."
+    no_pending: "&cNo pending 2FA verification."
+    verified: "&a2FA code verified successfully."
+    invalid_code: "&cInvalid 2FA code."
+
+  no_permission: "&cYou do not have permission to use this command."
+
+  connection_limit:
+    exceeded: "&cToo many connections from this IP."
+
+  mojang_auth:
+    failed: "&cMojang authentication failed. Please check your username."
+
+  error:
+    database: "&cAn error occurred with the database. Please contact an admin."
+    internal: "&cAn internal error occurred. Please contact an admin."

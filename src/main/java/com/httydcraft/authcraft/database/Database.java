@@ -1,4 +1,11 @@
 package com.httydcraft.authcraft.database;
 
-public class Database {
+import com.zaxxer.hikari.HikariConfig;
+
+import java.sql.SQLException;
+
+public interface Database {
+    HikariConfig configureHikari();
+    void initializeTables() throws SQLException;
+    void backup() throws SQLException;
 }
