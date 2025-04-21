@@ -145,7 +145,47 @@ public class TwoFACommand implements CommandExecutor, TabCompleter {
                 }
                 return true;
             }
-            // Проверка Telegram/VK: просто проверяем, что привязка есть
+            // Проверка Telegram/VK: проверяем pendingCodes (ожидаемый код)
+            if (args.length == 2) {
+                String tgKey = player.getUniqueId().toString() + "TELEGRAM";
+                String vkKey = player.getUniqueId().toString() + "VK";
+                String expectedTg = botManager.getPendingCode(tgKey);
+                String expectedVk = botManager.getPendingCode(vkKey);
+                if (expectedTg != null && expectedTg.equals(args[1])) {
+                    try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
+                         java.sql.PreparedStatement stmt = conn.prepareStatement("UPDATE players SET twofa_method = ?, twofa_data = ? WHERE identifier = ?")) {
+                        stmt.setString(1, "TELEGRAM");
+                        stmt.setString(2, botManager.getLinkedTelegram(player.getUniqueId()));
+                        String idForTg = plugin.getConfig().getString("auth.method", "uuid").equalsIgnoreCase("nickname")
+                                ? player.getName() : player.getUniqueId().toString();
+                        stmt.setString(3, idForTg);
+                        stmt.executeUpdate();
+                        botManager.removePendingCode(tgKey);
+                        messageUtils.sendMessage(player, "2fa.enabled");
+                    } catch (Exception e) {
+                        messageUtils.sendMessage(player, "error.database");
+                    }
+                    return true;
+                } else if (expectedVk != null && expectedVk.equals(args[1])) {
+                    try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
+                         java.sql.PreparedStatement stmt = conn.prepareStatement("UPDATE players SET twofa_method = ?, twofa_data = ? WHERE identifier = ?")) {
+                        stmt.setString(1, "VK");
+                        stmt.setString(2, botManager.getLinkedVK(player.getUniqueId()));
+                        String idForVk = plugin.getConfig().getString("auth.method", "uuid").equalsIgnoreCase("nickname")
+                                ? player.getName() : player.getUniqueId().toString();
+                        stmt.setString(3, idForVk);
+                        stmt.executeUpdate();
+                        botManager.removePendingCode(vkKey);
+                        messageUtils.sendMessage(player, "2fa.enabled");
+                    } catch (Exception e) {
+                        messageUtils.sendMessage(player, "error.database");
+                    }
+                    return true;
+                }
+                player.sendMessage("§cНеверный код подтверждения. Проверьте код и попробуйте снова.");
+                return true;
+            }
+            // Старый режим: просто проверяем, что привязка есть
             if (botManager.getLinkedTelegram(player.getUniqueId()) != null) {
                 try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
                      java.sql.PreparedStatement stmt = conn.prepareStatement("UPDATE players SET twofa_method = ?, twofa_data = ? WHERE identifier = ?")) {
@@ -176,37 +216,8 @@ public class TwoFACommand implements CommandExecutor, TabCompleter {
                 }
                 return true;
             }
-            if (authManager.getPlayerState(player.getUniqueId()) != PlayerState.PENDING_2FA) {
-                messageUtils.sendMessage(player, "2fa.no_pending");
-                return true;
-            }
-            try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
-                 java.sql.PreparedStatement stmt = conn.prepareStatement(
-                         "SELECT twofa_method, twofa_data FROM players WHERE identifier = ?")) {
-                stmt.setString(1, identifier);
-                java.sql.ResultSet rs = stmt.executeQuery();
-                if (!rs.next()) {
-                    messageUtils.sendMessage(player, "error.internal");
-                    return true;
-                }
-                String method = rs.getString("twofa_method");
-                String twofaData = rs.getString("twofa_data");
-                boolean valid = false;
-                if (method.equals("TOTP")) {
-                    valid = totpUtils.verifyCode(twofaData, args[1]);
-                } else if (method.equals("TELEGRAM") || method.equals("VK")) {
-                    valid = botManager.verify2FACode(player, method, args[1]);
-                }
-                if (valid) {
-                    authManager.setPlayerState(player.getUniqueId(), PlayerState.AUTHENTICATED);
-                    messageUtils.sendMessage(player, "2fa.verified");
-                    authManager.teleportToMainWorld(player);
-                } else {
-                    messageUtils.sendMessage(player, "2fa.invalid_code");
-                }
-            } catch (java.sql.SQLException e) {
-                messageUtils.sendMessage(player, "error.database");
-            }
+            player.sendMessage("§cНет ожидающего кода для подтверждения 2FA. Сначала выполните /2fa enable.");
+            return true;
         }
         return true;
     }

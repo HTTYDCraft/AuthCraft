@@ -152,6 +152,14 @@ public class BotManager {
         return false;
     }
 
+    public String getPendingCode(String key) {
+        return pendingCodes.get(key);
+    }
+
+    public void removePendingCode(String key) {
+        pendingCodes.remove(key);
+    }
+
     public TelegramBot getTelegramBot() {
         return telegramBot;
     }

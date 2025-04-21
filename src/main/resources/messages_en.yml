@@ -1,27 +1,28 @@
 command:
   player_only: "&cThis command can only be used by players."
   not_authenticated: "&cYou must be authenticated to use this command."
-no_permission: "&cYou do not have permission to use this command."
+no_permission: "§cNo permission."
 register:
-  usage: "&cUsage: /register <password>"
+  usage: "Usage: /register <password> <password>"
+  password_mismatch: "§cPasswords do not match! Try again."
   already_authenticated: "&cYou are already authenticated."
   already_registered: "&cThis account is already registered."
   invalid_password: "&cPassword must be 8-16 characters, include uppercase, lowercase, digits, and not match your username."
   success: "&aSuccessfully registered!"
 login:
-  usage: "&cUsage: /login <password>"
+  usage: "Usage: /login <password>"
   already_authenticated: "&cYou are already authenticated."
   invalid_credentials: "&cInvalid password."
   2fa_required: "&eTwo-factor authentication required. Use /2fa verify <code>"
   success: "&aSuccessfully logged in!"
 changepassword:
-  usage: "&cUsage: /changepassword <old_password> <new_password>"
+  usage: "Usage: /changepassword <old password> <new password>"
   not_authenticated: "&cYou must be authenticated to change your password."
   invalid_old_password: "&cInvalid old password."
   invalid_password: "&cNew password must be 8-16 characters, include uppercase, lowercase, digits, and not match your username."
   success: "&aPassword changed successfully!"
 logout:
-  usage: "&cUsage: /logout"
+  usage: "Usage: /logout"
   not_authenticated: "&cYou are not authenticated."
   success: "&aSuccessfully logged out."
 2fa:
@@ -34,10 +35,10 @@ logout:
   verified: "&a2FA verified successfully."
   invalid_code: "&cInvalid 2FA code."
 authcraft:
-  usage: "&cUsage: /authcraft <backup|reload|stats>"
-  backup_success: "&aDatabase backup completed."
-  reload_success: "&aConfiguration reloaded."
-  stats: "&eServer stats: (not implemented)"
+  usage: "Usage: /authcraft <backup|reload|stats>"
+  backup_success: "§aDatabase backup created successfully."
+  reload_success: "§aConfiguration reloaded successfully."
+  stats: "§aStatistics:"
 cloudflare_warp:
   required: "&cYou must use Cloudflare Warp to join this server."
   disabled: "&cCloudflare Warp is not allowed on this server."

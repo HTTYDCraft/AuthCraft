@@ -3,25 +3,26 @@ command:
   not_authenticated: "&cВы должны авторизоваться для использования этой команды."
   no_permission: "&cУ вас нет прав для использования этой команды."
 register:
-  usage: "&cИспользование: /register <пароль>"
+  usage: "Используйте: /register <пароль> <повтор пароля>"
+  password_mismatch: "§cПароли не совпадают! Повторите попытку."
   already_authenticated: "&cВы уже авторизованы."
   already_registered: "&cЭтот аккаунт уже зарегистрирован."
   invalid_password: "&cПароль должен быть 8-16 символов, содержать заглавные и строчные буквы, цифры и не совпадать с именем."
   success: "&aУспешно зарегистрированы!"
 login:
-  usage: "&cИспользование: /login <пароль>"
+  usage: "Используйте: /login <пароль>"
   already_authenticated: "&cВы уже авторизованы."
   invalid_credentials: "&cНеверный пароль."
   2fa_required: "&eТребуется двухфакторная аутентификация. Используйте /2fa verify <код>"
   success: "&aУспешно вошли!"
 changepassword:
-  usage: "&cИспользование: /changepassword <старый_пароль> <новый_пароль>"
+  usage: "Используйте: /changepassword <старый пароль> <новый пароль>"
   not_authenticated: "&cВы должны быть авторизованы для смены пароля."
   invalid_old_password: "&cНеверный старый пароль."
   invalid_password: "&cНовый пароль должен быть 8-16 символов, содержать заглавные и строчные буквы, цифры и не совпадать с именем."
   success: "&aПароль успешно изменен!"
 logout:
-  usage: "&cИспользование: /logout"
+  usage: "Используйте: /logout"
   not_authenticated: "&cВы не авторизованы."
   success: "&aУспешно вышли."
 2fa:
@@ -34,10 +35,10 @@ logout:
   verified: "&a2FA успешно подтверждена."
   invalid_code: "&cНеверный код 2FA."
 authcraft:
-  usage: "&cИспользование: /authcraft <backup|reload|stats>"
-  backup_success: "&aРезервное копирование базы данных завершено."
-  reload_success: "&aКонфигурация перезагружена."
-  stats: "&eСтатистика сервера: (не реализована)"
+  usage: "Используйте: /authcraft <backup|reload|stats>"
+  backup_success: "§aБэкап базы данных успешно создан."
+  reload_success: "§aКонфигурация успешно перезагружена."
+  stats: "§aСтатистика:"
 cloudflare_warp:
   required: "&cДля входа на сервер требуется Cloudflare Warp."
   disabled: "&cCloudflare Warp не разрешен на этом сервере."
